@@ -169,6 +169,7 @@ export interface GameState {
 }
 
 export interface GameEvent {
+  id: string;
   ts: string;
   type: string;
   summary: string;

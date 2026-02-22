@@ -81,9 +81,9 @@ export function EventsPanel({ events }: EventsPanelProps) {
         ))}
       </div>
       <div className="flex-1 overflow-y-auto px-2 py-1 custom-scrollbar">
-        {filtered.map((e, i) => (
+        {filtered.map((e) => (
           <div
-            key={`${e.ts}-${i}`}
+            key={e.id}
             className="flex items-start gap-1.5 py-1.5 px-1.5 rounded hover:bg-zinc-800/40 transition-colors"
           >
             <span className="font-mono text-[10px] text-zinc-700 mt-0.5 shrink-0 hidden sm:inline">

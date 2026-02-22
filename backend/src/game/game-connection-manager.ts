@@ -173,6 +173,11 @@ export class GameConnectionManager {
       }
 
       this.restState = mergeStateUpdate(null, loginData.result);
+      // Seed previousSystem so the first WebSocket state_update doesn't
+      // misidentify the initial position as a system change.
+      if (this.restState.player?.current_system) {
+        this.previousSystem = this.restState.player.current_system;
+      }
       debug('game', 'fetchInitialState: cached initial state via REST');
 
       // Broadcast to any connected clients

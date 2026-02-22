@@ -125,8 +125,14 @@ export class SpaceMoltClient {
 
     ws.on('close', () => {
       debug('spacemolt', 'WebSocket closed');
+      // Ignore stale close events from a previous socket (e.g. after reconnect())
+      if (this.ws !== ws) return;
+      this.ws = null;
       this.clearTimers();
-      if (!this.intentionalClose) {
+      // Only notify/reconnect when it was not intentional AND we still want to reconnect.
+      // Skipping shouldReconnect here would cause onDisconnected() to fire even after
+      // an auth error, incorrectly showing "Reconnecting..." in the UI.
+      if (!this.intentionalClose && this.shouldReconnect) {
         this.callbacks.onDisconnected();
         this.scheduleReconnect();
       }
