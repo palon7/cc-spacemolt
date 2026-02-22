@@ -78,14 +78,12 @@ export function useWebSocket() {
         case 'entry':
           setEntries((prev) => {
             const entry = msg.entry;
-            // Update existing entry by ID (streaming deltas or finalization)
-            if (entry.kind === 'text' || entry.kind === 'thinking') {
-              const existingIndex = prev.findIndex((e) => e.id === entry.id);
-              if (existingIndex >= 0) {
-                const next = [...prev];
-                next[existingIndex] = entry;
-                return next;
-              }
+            // Update existing entry by ID (streaming deltas, finalization, or reconnection replay)
+            const existingIndex = prev.findIndex((e) => e.id === entry.id);
+            if (existingIndex >= 0) {
+              const next = [...prev];
+              next[existingIndex] = entry;
+              return next;
             }
             return [...prev, entry];
           });
