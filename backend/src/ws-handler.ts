@@ -49,6 +49,22 @@ export function setupWebSocket({
 }: WsHandlerOptions): void {
   const wss = new WebSocketServer({ server: server as never });
 
+  // Set callbacks once — all callbacks broadcast to wss.clients, so
+  // they remain correct regardless of which clients are connected.
+  sessionManager.setCallbacks({
+    onEntry: (entry: ParsedEntry) => broadcast(wss, { type: 'entry', entry }),
+    onMeta: (m: SessionMeta) => broadcast(wss, { type: 'meta', meta: m }),
+    onStatus: (status: AgentStatus) => {
+      broadcast(wss, { type: 'status', status });
+      syncGameConnection(status, gameConnectionManager);
+    },
+    onClearStreaming: () => broadcast(wss, { type: 'clear_streaming' }),
+    onError: (message: string) => broadcast(wss, { type: 'error', message }),
+    onSessionStarted: (sessionId: string) => {
+      gameConnectionManager.setSessionDir(path.join(logDir, sessionId), sessionId);
+    },
+  });
+
   const alive = new WeakMap<WebSocket, boolean>();
   const heartbeat = setInterval(() => {
     for (const ws of wss.clients) {
@@ -99,21 +115,6 @@ export function setupWebSocket({
     }
     const travelHistory = gameConnectionManager.currentTravelHistory;
     send(ws, { type: 'travel_history', history: travelHistory });
-
-    // Subscribe to session manager events
-    sessionManager.setCallbacks({
-      onEntry: (entry: ParsedEntry) => broadcast(wss, { type: 'entry', entry }),
-      onMeta: (m: SessionMeta) => broadcast(wss, { type: 'meta', meta: m }),
-      onStatus: (status: AgentStatus) => {
-        broadcast(wss, { type: 'status', status });
-        syncGameConnection(status, gameConnectionManager);
-      },
-      onClearStreaming: () => broadcast(wss, { type: 'clear_streaming' }),
-      onError: (message: string) => broadcast(wss, { type: 'error', message }),
-      onSessionStarted: (sessionId: string) => {
-        gameConnectionManager.setSessionDir(path.join(logDir, sessionId), sessionId);
-      },
-    });
 
     ws.on('message', (data) => {
       let msg: ClientMessage;

@@ -2,6 +2,9 @@
 // Shared types between backend and frontend
 // ---------------------------------------------------------------------------
 
+/** Maximum number of game events kept in memory (frontend and backend). */
+export const MAX_GAME_EVENTS = 500;
+
 export type EntryKind =
   | 'system'
   | 'thinking'

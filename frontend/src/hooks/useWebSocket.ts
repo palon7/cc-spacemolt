@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { MAX_GAME_EVENTS } from '@cc-spacemolt/shared';
 import type {
   ParsedEntry,
   SessionMeta,
@@ -122,7 +123,10 @@ export function useWebSocket() {
           setGameStatus({ status: msg.status, message: msg.message });
           break;
         case 'game_event':
-          setEvents((prev) => [msg.event, ...prev]);
+          setEvents((prev) => {
+            const updated = [msg.event, ...prev];
+            return updated.length > MAX_GAME_EVENTS ? updated.slice(0, MAX_GAME_EVENTS) : updated;
+          });
           break;
         case 'travel_history':
           setTravelHistory(msg.history);

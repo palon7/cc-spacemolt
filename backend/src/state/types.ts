@@ -23,3 +23,4 @@ export type {
   ShipModule,
   SessionSummary,
 } from '@cc-spacemolt/shared';
+export { MAX_GAME_EVENTS } from '@cc-spacemolt/shared';

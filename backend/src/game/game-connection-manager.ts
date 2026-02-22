@@ -7,6 +7,7 @@ import { mergeStateUpdate } from './message-transformer.js';
 import { PoiCache } from './game-data-cache.js';
 import { loadEnv } from '../utils/env.js';
 import { debug } from '../logger/debug-logger.js';
+import consola from 'consola';
 
 const SPACEMOLT_API_BASE = 'https://game.spacemolt.com/api/v1';
 
@@ -55,13 +56,13 @@ export class GameConnectionManager {
       },
       onDisconnected: () => {
         this._gameStatus = { status: 'connecting', message: 'Reconnecting...' };
-        console.log('SpaceMolt game disconnected, reconnecting...');
+        consola.log('SpaceMolt game disconnected, reconnecting...');
         debug('game', 'SpaceMolt game disconnected');
         this.broadcaster?.onGameStatus(this._gameStatus);
       },
       onError: (msg) => {
         this._gameStatus = { status: 'error', message: msg };
-        console.error(`SpaceMolt error: ${msg}`);
+        consola.error(`SpaceMolt error: ${msg}`);
         this.broadcaster?.onGameStatus(this._gameStatus);
       },
     });
@@ -118,7 +119,7 @@ export class GameConnectionManager {
     this.lastPassword = '';
     this._gameStatus = { status: 'paused', message: 'Agent not running' };
     this.broadcaster?.onGameStatus(this._gameStatus);
-    console.log('SpaceMolt game connection paused (agent not running)');
+    consola.log('SpaceMolt game connection paused (agent not running)');
     debug('game', 'GameConnectionManager paused');
   }
 
