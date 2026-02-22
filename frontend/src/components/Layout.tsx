@@ -52,7 +52,7 @@ export function Layout({
   const [showDetail, setShowDetail] = useState(false);
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
+    <div className="h-dvh w-screen flex flex-col overflow-hidden">
       <TopBar connected={connected} gameStatus={gameStatus} gameState={gameState} />
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />
 

@@ -182,14 +182,80 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     };
 
+    // ── Touch events ──────────────────────────────────────────────
+    let pinchStartDist = 0;
+    let pinchStartZoom = 0;
+
+    const getTouchDist = (t: TouchList) =>
+      Math.hypot(t[0]!.clientX - t[1]!.clientX, t[0]!.clientY - t[1]!.clientY);
+
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        isDragging.current = true;
+        dragStart.current = { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY };
+        dragStartCenter.current = {
+          x: animCurrent.current?.x ?? 0,
+          y: animCurrent.current?.y ?? 0,
+        };
+      } else if (e.touches.length === 2) {
+        isDragging.current = false;
+        pinchStartDist = getTouchDist(e.touches);
+        pinchStartZoom = zoom.current;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging.current) {
+        const dx = e.touches[0]!.clientX - dragStart.current.x;
+        const dy = e.touches[0]!.clientY - dragStart.current.y;
+        const z = zoom.current;
+        const newCenter = {
+          x: dragStartCenter.current.x - dx / z,
+          y: dragStartCenter.current.y - dy / z,
+        };
+        animCurrent.current = newCenter;
+        animTarget.current = newCenter;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          setTracking(false);
+        }
+      } else if (e.touches.length === 2 && pinchStartDist > 0) {
+        const dist = getTouchDist(e.touches);
+        const scale = dist / pinchStartDist;
+        zoom.current = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * scale));
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 0) {
+        isDragging.current = false;
+      } else if (e.touches.length === 1) {
+        // Transition from pinch back to single-finger drag
+        isDragging.current = true;
+        dragStart.current = { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY };
+        dragStartCenter.current = {
+          x: animCurrent.current?.x ?? 0,
+          y: animCurrent.current?.y ?? 0,
+        };
+        pinchStartDist = 0;
+      }
+    };
+
     canvas.style.cursor = 'grab';
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
@@ -241,7 +307,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
           Loading map...
         </div>
       ) : null}
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      <canvas ref={canvasRef} className="block w-full h-full" style={{ touchAction: 'none' }} />
       <button
         onClick={() => setShowHistory((v) => !v)}
         className={`absolute bottom-1.5 ${!tracking ? 'right-14' : 'right-1.5'} p-1 rounded bg-zinc-800/80 border border-zinc-700/50 hover:bg-zinc-700/80 transition-colors ${showHistory ? 'text-orange-400' : 'text-zinc-600'}`}
