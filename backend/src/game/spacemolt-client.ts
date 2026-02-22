@@ -4,6 +4,7 @@
 
 import WebSocket from 'ws';
 import type { GameState, GameEvent } from '../state/types.js';
+import { MAX_GAME_EVENTS } from '../state/types.js';
 import type { SpaceMoltMessage, StateUpdatePayload } from './types.js';
 import { mergeStateUpdate, transformEventMessage } from './message-transformer.js';
 import { debug } from '../logger/debug-logger.js';
@@ -13,7 +14,6 @@ const INITIAL_RECONNECT_MS = 2_000;
 const MAX_RECONNECT_MS = 30_000;
 const HEALTH_CHECK_INTERVAL_MS = 60_000;
 const PONG_TIMEOUT_MS = 10_000;
-const DEFAULT_MAX_EVENTS = 500;
 
 export interface SpaceMoltClientCallbacks {
   onStateUpdate: (state: GameState) => void;
@@ -49,7 +49,7 @@ export class SpaceMoltClient {
   private pongTimer: ReturnType<typeof setTimeout> | null = null;
   private lastMessageAt = 0;
 
-  constructor(callbacks: SpaceMoltClientCallbacks, maxEvents = DEFAULT_MAX_EVENTS) {
+  constructor(callbacks: SpaceMoltClientCallbacks, maxEvents = MAX_GAME_EVENTS) {
     this.callbacks = callbacks;
     this.maxEvents = maxEvents;
   }
