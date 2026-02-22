@@ -122,7 +122,10 @@ export function useWebSocket() {
           setGameStatus({ status: msg.status, message: msg.message });
           break;
         case 'game_event':
-          setEvents((prev) => [msg.event, ...prev]);
+          setEvents((prev) => {
+            const updated = [msg.event, ...prev];
+            return updated.length > 500 ? updated.slice(0, 500) : updated;
+          });
           break;
         case 'travel_history':
           setTravelHistory(msg.history);

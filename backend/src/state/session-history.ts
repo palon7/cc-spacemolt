@@ -5,12 +5,13 @@ import readline from 'readline';
 import type { ParsedEntry, SessionMeta, SessionSummary } from './types.js';
 import { createReplayParser } from '../agent/message-parser.js';
 import type { StreamJsonMessage } from '../agent/message-parser.js';
+import { getContextWindow } from '../utils/context-window.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * List all sessions in the log directory.
- * Reads only the first and last lines of each raw.jsonl for metadata.
+ * Streams each raw.jsonl line-by-line to build metadata without loading the whole file.
  */
 export async function listSessions(logDir: string): Promise<SessionSummary[]> {
   let dirEntries: fs.Dirent[];
@@ -90,7 +91,7 @@ export async function replaySession(
           inputTokens: 0,
           outputTokens: 0,
           isCompacting: false,
-          contextWindow: 0,
+          contextWindow: getContextWindow(entry.model, entry.betas),
           supportsInput: true,
         };
       } else if (entry.kind === 'result' && meta) {
@@ -114,54 +115,42 @@ async function buildSessionSummary(
   dirName: string,
 ): Promise<SessionSummary | null> {
   const stat = await fsp.stat(rawPath);
-  const content = await fsp.readFile(rawPath, 'utf-8');
-  const lines = content.split('\n').filter((l) => l.trim());
-  if (lines.length === 0) return null;
 
-  let firstMsg: StreamJsonMessage;
-  try {
-    firstMsg = JSON.parse(lines[0]) as StreamJsonMessage;
-  } catch {
-    return null;
-  }
+  let firstMsg: StreamJsonMessage | null = null;
+  let lastResultMsg: StreamJsonMessage | null = null;
+  let lastAssistantMsg: StreamJsonMessage | null = null;
+  let lineCount = 0;
 
-  const sessionId = firstMsg.session_id ?? dirName;
-  const model = firstMsg.model ?? 'unknown';
-  const startedAt = stat.birthtime.toISOString();
+  // Stream line-by-line to avoid loading the entire file into memory
+  const stream = fs.createReadStream(rawPath, { encoding: 'utf-8' });
+  const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
 
-  let totalCostUsd = 0;
-  let numTurns = 0;
-  let durationMs = 0;
-  let lastMessage: string | undefined;
-
-  // Scan from the end to find result and last assistant text
-  for (let i = lines.length - 1; i >= 1; i--) {
+  for await (const line of rl) {
+    if (!line.trim()) continue;
+    lineCount++;
+    let msg: StreamJsonMessage;
     try {
-      const msg = JSON.parse(lines[i]) as StreamJsonMessage;
-      if (msg.type === 'result' && totalCostUsd === 0) {
-        totalCostUsd = msg.total_cost_usd ?? 0;
-        numTurns = msg.num_turns ?? 0;
-        durationMs = msg.duration_ms ?? 0;
-      }
-      if (!lastMessage && msg.type === 'assistant') {
-        lastMessage = extractAssistantText(msg);
-      }
-      if (totalCostUsd > 0 && lastMessage) break;
+      msg = JSON.parse(line) as StreamJsonMessage;
     } catch {
-      // skip unparseable lines
+      continue;
     }
+    if (!firstMsg) firstMsg = msg;
+    if (msg.type === 'result') lastResultMsg = msg;
+    if (msg.type === 'assistant') lastAssistantMsg = msg;
   }
+
+  if (!firstMsg) return null;
 
   return {
-    sessionId,
-    model,
-    totalCostUsd,
-    numTurns,
-    durationMs,
-    startedAt,
+    sessionId: firstMsg.session_id ?? dirName,
+    model: firstMsg.model ?? 'unknown',
+    totalCostUsd: lastResultMsg?.total_cost_usd ?? 0,
+    numTurns: lastResultMsg?.num_turns ?? 0,
+    durationMs: lastResultMsg?.duration_ms ?? 0,
+    startedAt: stat.birthtime.toISOString(),
     lastModified: stat.mtime.toISOString(),
-    entryCount: lines.length,
-    lastMessage,
+    entryCount: lineCount,
+    lastMessage: lastAssistantMsg ? extractAssistantText(lastAssistantMsg) : undefined,
   };
 }
 

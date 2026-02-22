@@ -55,6 +55,9 @@ export class FileLogger {
   close(): void {
     this.rawStream?.end();
     this.textStream?.end();
+    this.rawStream = null;
+    this.textStream = null;
+    this.initialized = false;
   }
 }
 
