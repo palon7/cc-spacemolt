@@ -120,8 +120,41 @@ export type ScanDetectedPayload = {
 
 export type MiningYieldPayload = {
   resource_id?: string;
+  resource_name?: string;
   quantity?: number;
   remaining?: number;
+  remaining_display?: string;
+};
+
+export type PirateWarningPayload = {
+  pirate_name?: string;
+  pirate_tier?: string;
+  is_boss?: boolean;
+  delay_ticks?: number;
+  message?: string;
+  pirate_id?: string;
+};
+
+export type PirateCombatPayload = {
+  pirate_name?: string;
+  pirate_tier?: string;
+  is_boss?: boolean;
+  damage?: number;
+  damage_type?: string;
+  your_hull?: number;
+  your_max_hull?: number;
+  your_shield?: number;
+  pirate_id?: string;
+};
+
+export type ActionResultPayload = {
+  command?: string;
+  tick?: number;
+  result?: {
+    message?: string;
+    total_earned?: number;
+    [key: string]: unknown;
+  };
 };
 
 export type ChatMessagePayload = {
@@ -163,6 +196,7 @@ export type ReconnectedPayload = {
   message?: string;
   was_pilotless?: boolean;
   tick?: number;
+  ticks_remaining?: number;
 };
 
 export type StateChangePayload = {

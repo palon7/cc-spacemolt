@@ -174,13 +174,24 @@ describe('transformEventMessage - combat', () => {
 });
 
 describe('transformEventMessage - mining/trade', () => {
-  it('mining_yield', () => {
+  it('mining_yield (with resource_name and remaining_display)', () => {
+    const e = transformEventMessage('mining_yield', {
+      resource_id: 'iron',
+      resource_name: 'Iron Ore',
+      quantity: 5,
+      remaining: 95,
+      remaining_display: 'unlimited',
+    });
+    expect(e.summary).toBe('Iron Ore x5 (unlimited remaining)');
+  });
+
+  it('mining_yield (legacy format without resource_name)', () => {
     const e = transformEventMessage('mining_yield', {
       resource_id: 'iron',
       quantity: 5,
       remaining: 95,
     });
-    expect(e.summary).toBe('Resource: iron Quantity: 5 Remaining: 95');
+    expect(e.summary).toBe('iron x5 (95 remaining)');
   });
 
   it('trade_offer_received', () => {
@@ -227,6 +238,15 @@ describe('transformEventMessage - movement', () => {
       username: 'Bob',
       poi_name: 'Station Alpha',
       clan_tag: null,
+    });
+    expect(e.summary).toBe('Bob(clan=No clan) departed from Station Alpha');
+  });
+
+  it('poi_departure (clan_tag="")', () => {
+    const e = transformEventMessage('poi_departure', {
+      username: 'Bob',
+      poi_name: 'Station Alpha',
+      clan_tag: '',
     });
     expect(e.summary).toBe('Bob(clan=No clan) departed from Station Alpha');
   });
@@ -291,6 +311,74 @@ describe('transformEventMessage - ok variants', () => {
   });
 });
 
+describe('transformEventMessage - pirates', () => {
+  it('pirate_warning (no boss, no delay)', () => {
+    const e = transformEventMessage('pirate_warning', {
+      pirate_name: 'Sentinel',
+      pirate_tier: 'medium',
+      is_boss: false,
+      delay_ticks: 0,
+    });
+    expect(e.summary).toBe('Sentinel (medium) detected you!');
+  });
+
+  it('pirate_warning (boss with delay)', () => {
+    const e = transformEventMessage('pirate_warning', {
+      pirate_name: 'Dreadnought',
+      pirate_tier: 'boss',
+      is_boss: true,
+      delay_ticks: 2,
+    });
+    expect(e.summary).toBe('Dreadnought (boss [BOSS]) detected you! (in 2 ticks)');
+  });
+
+  it('pirate_combat (not boss)', () => {
+    const e = transformEventMessage('pirate_combat', {
+      pirate_name: 'Raider',
+      pirate_tier: 'small',
+      is_boss: false,
+      damage: 15,
+      damage_type: 'explosive',
+      your_hull: 85,
+      your_max_hull: 100,
+      your_shield: 50,
+    });
+    expect(e.summary).toBe('Raider dealt 15 explosive damage. Hull: 85/100 Shield: 50');
+  });
+
+  it('pirate_combat (boss)', () => {
+    const e = transformEventMessage('pirate_combat', {
+      pirate_name: 'Dreadnought',
+      pirate_tier: 'boss',
+      is_boss: true,
+      damage: 80,
+      damage_type: 'energy',
+      your_hull: 20,
+      your_max_hull: 100,
+      your_shield: 0,
+    });
+    expect(e.summary).toBe('Dreadnought [BOSS] dealt 80 energy damage. Hull: 20/100 Shield: 0');
+  });
+});
+
+describe('transformEventMessage - action_result', () => {
+  it('action_result with result.message', () => {
+    const e = transformEventMessage('action_result', {
+      command: 'mine',
+      result: { message: 'Mining complete' },
+    });
+    expect(e.summary).toBe('Mining complete');
+  });
+
+  it('action_result without result.message (fallback)', () => {
+    const e = transformEventMessage('action_result', {
+      command: 'jump',
+      result: { total_earned: 500 },
+    });
+    expect(e.summary).toBe('jump completed');
+  });
+});
+
 describe('transformEventMessage - death/danger', () => {
   it('player_died (with killer)', () => {
     const e = transformEventMessage('player_died', {
@@ -326,22 +414,22 @@ describe('transformEventMessage - system', () => {
     expect(e.summary).toBe('Error Code: E001 Message: Fuel empty wait=10');
   });
 
-  it('reconnected (was_pilotless=true)', () => {
+  it('reconnected (ticks_remaining)', () => {
     const e = transformEventMessage('reconnected', {
       message: 'Welcome back',
       was_pilotless: true,
-      tick: 42,
+      ticks_remaining: 42,
     });
-    expect(e.summary).toBe('Welcome back (was pilotless) Next tick: 42');
+    expect(e.summary).toBe('Welcome back (was pilotless) Ticks remaining: 42');
   });
 
-  it('reconnected (was_pilotless=false)', () => {
+  it('reconnected (fallback to tick for backwards compat)', () => {
     const e = transformEventMessage('reconnected', {
       message: 'Welcome back',
       was_pilotless: false,
       tick: 10,
     });
-    expect(e.summary).toBe('Welcome back Next tick: 10');
+    expect(e.summary).toBe('Welcome back Ticks remaining: 10');
   });
 
   it('pilotless_ship', () => {
