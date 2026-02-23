@@ -2,10 +2,15 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { ParsedEntry, SessionMeta, AgentStatus, ToolResultEntry } from '@cc-spacemolt/shared';
 import { useStickToBottom } from '../hooks/useStickToBottom';
 import { useSessionList } from '../hooks/useSessionList';
-import { IconSend, IconStop, IconRestart, IconArrowDown, IconClock } from './common/Icons';
+import { LuSend, LuSquare, LuRotateCcw, LuArrowDown, LuClock } from 'react-icons/lu';
 import { EntryRenderer } from './messages/EntryRenderer';
 import { SessionHistoryModal } from './SessionHistoryModal';
 import { SessionCard } from './common/SessionCard';
+import { PanelHeader } from './common/PanelHeader';
+import { PanelHeaderButton } from './common/PanelHeaderButton';
+import { IconButton } from './common/IconButton';
+import { ActionButton } from './common/ActionButton';
+import { PanelInput, PanelTextarea } from './common/PanelInput';
 
 function StatusBadge({
   color,
@@ -127,49 +132,43 @@ export function ClaudePanel({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 shrink-0">
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-1.5 h-1.5 rounded-full ${
-              isRunning
-                ? 'bg-amber-400'
-                : status === 'interrupted'
-                  ? 'bg-yellow-400'
-                  : status === 'error'
-                    ? 'bg-red-400'
-                    : 'bg-zinc-500'
-            }`}
-            style={{ boxShadow: isRunning ? '0 0 6px rgba(251,191,36,0.4)' : undefined }}
-          />
-          <h2 className="text-sm font-semibold text-zinc-300 tracking-widest uppercase">
-            Mission Log
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {isCompacting && <StatusBadge color="purple" label="Compacting" pulse />}
-          {isRunning && !isCompacting && <StatusBadge color="amber" label="Running" pulse />}
-          {status === 'interrupted' && <StatusBadge color="yellow" label="Stopped" />}
-          <button
-            onClick={handleShowHistory}
-            disabled={isRunning}
-            className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title="Session History"
-          >
-            <IconClock />
-          </button>
-          {sessionMeta && (
-            <span className="hidden sm:inline text-xs px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-600">
-              {sessionMeta.model}
-            </span>
-          )}
-          {sessionMeta && (
-            <span className="hidden sm:inline text-xs font-mono text-blue-400">
-              ${sessionMeta.totalCostUsd.toFixed(4)}
-            </span>
-          )}
-        </div>
-      </div>
+      <PanelHeader
+        title="Mission Log"
+        dotClass={
+          isRunning
+            ? 'bg-amber-400'
+            : status === 'interrupted'
+              ? 'bg-yellow-400'
+              : status === 'error'
+                ? 'bg-red-400'
+                : 'bg-zinc-500'
+        }
+        dotStyle={{ boxShadow: isRunning ? '0 0 6px rgba(251,191,36,0.4)' : undefined }}
+        right={
+          <>
+            {isCompacting && <StatusBadge color="purple" label="Compacting" pulse />}
+            {isRunning && !isCompacting && <StatusBadge color="amber" label="Running" pulse />}
+            {status === 'interrupted' && <StatusBadge color="yellow" label="Stopped" />}
+            <PanelHeaderButton
+              onClick={handleShowHistory}
+              disabled={isRunning}
+              title="Session History"
+            >
+              <LuClock size={12} />
+            </PanelHeaderButton>
+            {sessionMeta && (
+              <span className="hidden sm:inline text-xs px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-600">
+                {sessionMeta.model}
+              </span>
+            )}
+            {sessionMeta && (
+              <span className="hidden sm:inline text-xs font-mono text-blue-400">
+                ${sessionMeta.totalCostUsd.toFixed(4)}
+              </span>
+            )}
+          </>
+        }
+      />
 
       {/* Scrollable messages */}
       <div className="relative flex-1 min-h-0">
@@ -235,7 +234,7 @@ export function ClaudePanel({
             onClick={scrollToBottom}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-full bg-zinc-800/95 border border-zinc-600/80 shadow-lg shadow-black/50 hover:bg-zinc-700 hover:border-zinc-500 transition-all backdrop-blur-sm cursor-pointer"
           >
-            <IconArrowDown />
+            <LuArrowDown size={12} />
             {newCount > 0 ? (
               <span className="text-sm font-medium text-amber-400 tabular-nums">
                 {newCount} new
@@ -251,37 +250,29 @@ export function ClaudePanel({
       <div className="shrink-0 px-3 sm:px-4 py-2.5 border-t border-zinc-800 bg-zinc-900/80">
         {status === 'error' ? (
           /* Error — New Session only */
-          <div>
-            <button
-              onClick={handleReset}
-              disabled={!connected}
-              className="w-full py-2 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium tracking-wide"
-            >
-              New Session
-            </button>
-          </div>
+          <ActionButton onClick={handleReset} disabled={!connected}>
+            New Session
+          </ActionButton>
         ) : status === 'idle' ? (
           /* No session — Start Agent */
           <div className="flex flex-col gap-2">
-            <textarea
+            <PanelTextarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               placeholder={initialPrompt || 'Enter instructions...'}
               rows={2}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-y min-h-[2.5rem]"
             />
-            <button
+            <ActionButton
               onClick={() => startAgent(instructions.trim() || undefined)}
               disabled={!connected}
-              className="w-full py-2 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium tracking-wide"
             >
               Start Agent
-            </button>
+            </ActionButton>
           </div>
         ) : (status === 'interrupted' || status === 'done') && supportsInput ? (
           /* Interrupted / Done — Send message to resume, or start new session */
           <div className="flex items-center gap-2">
-            <input
+            <PanelInput
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -289,52 +280,38 @@ export function ClaudePanel({
                 status === 'done' ? 'Send a follow-up message...' : 'Send a message to resume...'
               }
               disabled={!connected}
-              className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors disabled:opacity-50"
             />
             <div className="flex items-center gap-1.5">
-              <button
+              <IconButton
+                color="emerald"
                 onClick={handleReset}
                 disabled={!connected}
-                className="shrink-0 p-2 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 title="New Session"
               >
-                <IconRestart />
-              </button>
-              <button
-                onClick={handleSend}
-                disabled={!input.trim()}
-                className="shrink-0 p-2 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <IconSend />
-              </button>
+                <LuRotateCcw size={14} />
+              </IconButton>
+              <IconButton color="amber" onClick={handleSend} disabled={!input.trim()}>
+                <LuSend size={16} />
+              </IconButton>
             </div>
           </div>
         ) : isRunning && supportsInput ? (
           /* Running — Stop + chat input */
           <div className="flex items-center gap-2">
-            <input
+            <PanelInput
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Send a message to Claude..."
               disabled={!connected}
-              className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors disabled:opacity-50"
             />
             <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => interrupt()}
-                className="shrink-0 p-2 rounded-lg bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 transition-colors"
-                title="Stop"
-              >
-                <IconStop />
-              </button>
-              <button
-                onClick={handleSend}
-                disabled={!input.trim()}
-                className="shrink-0 p-2 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <IconSend />
-              </button>
+              <IconButton color="red" onClick={() => interrupt()} title="Stop">
+                <LuSquare size={14} fill="currentColor" stroke="none" />
+              </IconButton>
+              <IconButton color="amber" onClick={handleSend} disabled={!input.trim()}>
+                <LuSend size={16} />
+              </IconButton>
             </div>
           </div>
         ) : null}

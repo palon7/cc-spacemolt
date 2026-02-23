@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ToolCallEntry, ToolResultEntry } from '@cc-spacemolt/shared';
-import { IconCheck, IconX } from '../common/Icons';
+import { LuCheck, LuX } from 'react-icons/lu';
 
 // ─── G helpers: styled game-text spans ───────────────────────────────────────
 const G = {
@@ -746,11 +746,11 @@ export function SpacemoltToolBlock({
           <span className="shrink-0 w-3 h-3 rounded-full border border-t-amber-400 border-amber-400/20 animate-spin" />
         ) : isError ? (
           <span className="shrink-0 text-red-500">
-            <IconX />
+            <LuX size={16} />
           </span>
         ) : (
           <span className="shrink-0 text-emerald-500">
-            <IconCheck />
+            <LuCheck size={12} />
           </span>
         )}
 

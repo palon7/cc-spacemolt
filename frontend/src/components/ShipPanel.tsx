@@ -1,7 +1,9 @@
 import type { GameState, TravelHistoryEntry } from '@cc-spacemolt/shared';
 import { GaugeBar } from './common/GaugeBar';
 import { Chip } from './common/Chip';
-import { IconInfo } from './common/Icons';
+import { LuInfo } from 'react-icons/lu';
+import { PanelHeader } from './common/PanelHeader';
+import { PanelHeaderButton } from './common/PanelHeaderButton';
 import { StarMap } from './StarMap';
 import { useMapData, resolveSystem } from '../hooks/useMapData';
 
@@ -30,29 +32,23 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 shrink-0">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-1.5 h-1.5 rounded-full bg-emerald-400"
-            style={{ boxShadow: '0 0 6px rgba(52,211,153,0.4)' }}
-          />
-          <h2 className="text-sm font-semibold text-zinc-300 tracking-widest uppercase">Ship</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {in_combat && (
-            <span className="text-2xs px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse font-bold tracking-wider">
-              COMBAT
-            </span>
-          )}
-          <button
-            onClick={onOpenDetail}
-            className="text-zinc-500 hover:text-zinc-200 p-1 rounded hover:bg-zinc-800 transition-colors"
-            title="Ship Details"
-          >
-            <IconInfo />
-          </button>
-        </div>
-      </div>
+      <PanelHeader
+        title="Ship"
+        dotClass="bg-emerald-400"
+        dotStyle={{ boxShadow: '0 0 6px rgba(52,211,153,0.4)' }}
+        right={
+          <>
+            {in_combat && (
+              <span className="text-2xs px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse font-bold tracking-wider">
+                COMBAT
+              </span>
+            )}
+            <PanelHeaderButton onClick={onOpenDetail} title="Ship Details">
+              <LuInfo size={14} />
+            </PanelHeaderButton>
+          </>
+        }
+      />
       <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar min-h-0">
         <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-zinc-800/40 border border-zinc-800">
           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white shrink-0">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ToolCallEntry, ToolResultEntry } from '@cc-spacemolt/shared';
-import { IconCheck, IconX } from '../common/Icons';
+import { LuCheck, LuX } from 'react-icons/lu';
 import { SpacemoltToolBlock } from './SpacemoltToolBlock';
 
 /** Maps tool name (lowercase) -> input key(s) to display as the primary parameter. */
@@ -76,11 +76,11 @@ export function ToolCallBlock({
           <span className="shrink-0 w-3 h-3 rounded-full border border-t-amber-400 border-amber-400/20 animate-spin" />
         ) : isError ? (
           <span className="shrink-0 text-red-500">
-            <IconX />
+            <LuX size={16} />
           </span>
         ) : (
           <span className="shrink-0 text-emerald-500">
-            <IconCheck />
+            <LuCheck size={12} />
           </span>
         )}
 

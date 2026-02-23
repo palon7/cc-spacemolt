@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ThinkingEntry } from '@cc-spacemolt/shared';
-import { IconClock } from '../common/Icons';
+import { LuClock } from 'react-icons/lu';
 
 function getLastLine(text: string): string {
   const lines = text.trimEnd().split('\n');
@@ -34,7 +34,7 @@ export function ThinkingBlock({ entry }: { entry: ThinkingEntry }) {
           </span>
         ) : (
           <span className="text-zinc-600">
-            <IconClock />
+            <LuClock size={12} />
           </span>
         )}
         <span className="text-xs uppercase tracking-wider text-zinc-600">Thinking</span>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PanelHeader } from './common/PanelHeader';
 import type { GameEvent } from '@cc-spacemolt/shared';
 
 const EVT_BADGE: Record<string, string> = {
@@ -55,16 +56,12 @@ export function EventsPanel({ events }: EventsPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 shrink-0">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-1.5 h-1.5 rounded-full bg-cyan-400"
-            style={{ boxShadow: '0 0 6px rgba(34,211,238,0.4)' }}
-          />
-          <h2 className="text-sm font-semibold text-zinc-300 tracking-widest uppercase">Events</h2>
-          <span className="font-mono text-xs text-zinc-600">{filtered.length}</span>
-        </div>
-      </div>
+      <PanelHeader
+        title="Events"
+        dotClass="bg-cyan-400"
+        dotStyle={{ boxShadow: '0 0 6px rgba(34,211,238,0.4)' }}
+        titleSuffix={<span className="font-mono text-xs text-zinc-600">{filtered.length}</span>}
+      />
       <div className="flex items-center gap-1 px-3 py-1.5 border-b border-zinc-800/50 overflow-x-auto shrink-0 custom-scrollbar">
         {FILTERS.map((f) => (
           <button

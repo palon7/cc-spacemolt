@@ -1,7 +1,7 @@
 import type { GameState } from '@cc-spacemolt/shared';
 import { GaugeBar } from './common/GaugeBar';
 import { Chip } from './common/Chip';
-import { IconX } from './common/Icons';
+import { LuX } from 'react-icons/lu';
 import { Modal } from './common/Modal';
 
 interface ShipDetailModalProps {
@@ -36,7 +36,7 @@ export function ShipDetailModal({ state, onClose }: ShipDetailModalProps) {
           onClick={onClose}
           className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
         >
-          <IconX />
+          <LuX size={16} />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">

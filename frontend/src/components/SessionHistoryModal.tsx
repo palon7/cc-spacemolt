@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { SessionSummary } from '@cc-spacemolt/shared';
-import { IconX } from './common/Icons';
+import { LuX } from 'react-icons/lu';
 import { Modal } from './common/Modal';
 import { SessionCard } from './common/SessionCard';
 
@@ -39,7 +39,7 @@ export function SessionHistoryModal({
           onClick={onClose}
           className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
         >
-          <IconX />
+          <LuX size={16} />
         </button>
       </div>
 
