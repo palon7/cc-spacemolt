@@ -52,7 +52,7 @@ export function TopBar({ connected, gameStatus, gameState }: TopBarProps) {
           </span>
         </div>
         <span className="text-zinc-800 hidden sm:inline">|</span>
-        <span className="text-xs text-zinc-600 font-mono hidden sm:inline">v0.2.0</span>
+        <span className="text-xs text-zinc-600 font-mono hidden sm:inline">v1.0.1</span>
       </div>
       <div className="flex items-center gap-2 sm:gap-4">
         <div
