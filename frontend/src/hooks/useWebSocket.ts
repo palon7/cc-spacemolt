@@ -27,8 +27,6 @@ export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mountedRef = useRef(false);
-  // id → array-index cache for entry deduplication; rebuilt on clear_streaming and reset
-  const entryIndexMapRef = useRef<Map<string, number>>(new Map());
 
   const connect = useCallback(() => {
     // Close any existing connection before creating a new one
@@ -80,37 +78,28 @@ export function useWebSocket() {
         case 'entry': {
           const entry = msg.entry;
           setEntries((prev) => {
-            const indexMap = entryIndexMapRef.current;
-            const existingIndex = indexMap.get(entry.id);
-            // Verify the stored index still points to the same entry.
-            // It may be stale if entries were removed by a preceding clear_streaming.
-            if (existingIndex !== undefined && prev[existingIndex]?.id === entry.id) {
+            const existingIndex = prev.findIndex((e) => e.id === entry.id);
+            if (existingIndex !== -1) {
+              // Update existing entry (streaming delta, finalization, or reconnect replay)
               const next = [...prev];
               next[existingIndex] = entry;
               return next;
             }
-            // New entry or stale index — append and update map
-            indexMap.set(entry.id, prev.length);
+            // New entry — append
             return [...prev, entry];
           });
           break;
         }
         case 'clear_streaming':
-          setEntries((prev) => {
-            const next = prev.filter((e) => {
+          setEntries((prev) =>
+            prev.filter((e) => {
               if ((e.kind === 'text' || e.kind === 'thinking') && e.isStreaming) return false;
               if (e.kind === 'tool_call' && Object.keys(e.input).length === 0) return false;
               return true;
-            });
-            // Rebuild index map after entries are removed
-            const indexMap = entryIndexMapRef.current;
-            indexMap.clear();
-            next.forEach((e, i) => indexMap.set(e.id, i));
-            return next;
-          });
+            }),
+          );
           break;
         case 'reset':
-          entryIndexMapRef.current.clear();
           setEntries([]);
           setSessionMeta(null);
           setStatus('idle');
