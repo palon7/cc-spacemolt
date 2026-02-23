@@ -194,9 +194,6 @@ export class SessionManager {
       return;
     }
 
-    // Log parsed entries (non-streaming)
-    this.logger.logParsed(entry);
-
     if (entry.kind === 'system') {
       debug('session-manager', `Received system entry, sessionId=${entry.sessionId}`);
       const prev = this.sessionMeta;
