@@ -142,6 +142,21 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Shared pan helper: applies a drag offset (in CSS px) to the camera.
+    // Used by both mouse and single-touch drag so behaviour stays in sync.
+    const applyPan = (dx: number, dy: number) => {
+      const z = zoom.current;
+      const newCenter = {
+        x: dragStartCenter.current.x - dx / z,
+        y: dragStartCenter.current.y - dy / z,
+      };
+      animCurrent.current = newCenter;
+      animTarget.current = newCenter;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        setTracking(false);
+      }
+    };
+
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const factor = e.deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
@@ -160,19 +175,8 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
 
     const onMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
-      const dx = e.clientX - dragStart.current.x;
-      const dy = e.clientY - dragStart.current.y;
-      const z = zoom.current;
-      const newCenter = {
-        x: dragStartCenter.current.x - dx / z,
-        y: dragStartCenter.current.y - dy / z,
-      };
-      animCurrent.current = newCenter;
-      animTarget.current = newCenter;
       // Stop auto-tracking once user drags
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        setTracking(false);
-      }
+      applyPan(e.clientX - dragStart.current.x, e.clientY - dragStart.current.y);
     };
 
     const onMouseUp = () => {
@@ -185,6 +189,9 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     // ── Touch events ──────────────────────────────────────────────
     let pinchStartDist = 0;
     let pinchStartZoom = 0;
+    // Cached bounding rect for pinch zoom — avoids triggering layout reflow
+    // on every touchmove. Refreshed at pinch start; null-checked as fallback.
+    let pinchRect: DOMRect | null = null;
 
     const getTouchDist = (t: TouchList) =>
       Math.hypot(t[0]!.clientX - t[1]!.clientX, t[0]!.clientY - t[1]!.clientY);
@@ -202,24 +209,17 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
         isDragging.current = false;
         pinchStartDist = getTouchDist(e.touches);
         pinchStartZoom = zoom.current;
+        pinchRect = canvas.getBoundingClientRect(); // cache once at pinch start
       }
     };
 
     const onTouchMove = (e: TouchEvent) => {
       e.preventDefault();
       if (e.touches.length === 1 && isDragging.current) {
-        const dx = e.touches[0]!.clientX - dragStart.current.x;
-        const dy = e.touches[0]!.clientY - dragStart.current.y;
-        const z = zoom.current;
-        const newCenter = {
-          x: dragStartCenter.current.x - dx / z,
-          y: dragStartCenter.current.y - dy / z,
-        };
-        animCurrent.current = newCenter;
-        animTarget.current = newCenter;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-          setTracking(false);
-        }
+        applyPan(
+          e.touches[0]!.clientX - dragStart.current.x,
+          e.touches[0]!.clientY - dragStart.current.y,
+        );
       } else if (e.touches.length === 2 && pinchStartDist > 0) {
         const dist = getTouchDist(e.touches);
         const scale = dist / pinchStartDist;
@@ -227,7 +227,8 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
 
         // Zoom towards the midpoint between the two fingers so the pinched
         // world position stays fixed under the user's fingers.
-        const rect = canvas.getBoundingClientRect();
+        // Use the rect cached at pinch start to avoid layout reflow per frame.
+        const rect = pinchRect ?? canvas.getBoundingClientRect();
         const midX = (e.touches[0]!.clientX + e.touches[1]!.clientX) / 2 - rect.left;
         const midY = (e.touches[0]!.clientY + e.touches[1]!.clientY) / 2 - rect.top;
         const halfW = rect.width / 2;
@@ -247,10 +248,13 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     };
 
+    // passive: true — onTouchEnd never calls preventDefault(), so there is no
+    // need to block browser optimisations with a non-passive listener.
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length === 0) {
         isDragging.current = false;
         pinchStartDist = 0;
+        pinchRect = null;
       } else if (e.touches.length === 1) {
         // Transition from pinch back to single-finger drag
         isDragging.current = true;
@@ -260,6 +264,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
           y: animCurrent.current?.y ?? 0,
         };
         pinchStartDist = 0;
+        pinchRect = null;
       }
     };
 
@@ -267,6 +272,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     const onTouchCancel = () => {
       isDragging.current = false;
       pinchStartDist = 0;
+      pinchRect = null;
     };
 
     canvas.style.cursor = 'grab';
@@ -274,7 +280,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
-    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: true });
     canvas.addEventListener('touchcancel', onTouchCancel, { passive: true });
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
