@@ -163,7 +163,7 @@ export function setupWebSocket({
           if (sessionManager.status === 'running' || sessionManager.status === 'starting') {
             send(ws, { type: 'error', message: 'Cannot switch session while active' });
           } else {
-            selectSession(wss, sessionManager, logDir, msg.sessionId);
+            selectSession(wss, sessionManager, gameConnectionManager, logDir, msg.sessionId);
           }
           break;
       }
@@ -211,6 +211,7 @@ async function loadTravelHistory(sessionDir: string): Promise<TravelHistoryEntry
 function selectSession(
   wss: WebSocketServer,
   sessionManager: SessionManager,
+  gameConnectionManager: GameConnectionManager,
   logDir: string,
   sessionId: string,
 ): void {
@@ -219,6 +220,7 @@ function selectSession(
     .loadFromHistory(sessionId)
     .then(async () => {
       const history = await loadTravelHistory(path.join(logDir, sessionId));
+      gameConnectionManager.setTravelHistory(history, sessionId);
       broadcast(wss, { type: 'travel_history', history });
     })
     .catch((err) => {
