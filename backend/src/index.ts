@@ -4,6 +4,8 @@ import path from 'path';
 import { program, InvalidArgumentError } from 'commander';
 import consola from 'consola';
 import ora from 'ora';
+import updateNotifier from 'update-notifier';
+import packageJson from '../../package.json' with { type: 'json' };
 import { loadConfig } from './config.js';
 import { ClaudeCliProvider } from './agent/providers/claude-cli.js';
 import { SessionManager } from './state/session-manager.js';
@@ -131,6 +133,10 @@ const sessionManager = new SessionManager(provider, config.maxLogEntries, logDir
 const gameConnectionManager = new GameConnectionManager(workspacePath);
 
 console.log(`${bigLogoText}\n`);
+const notifier = updateNotifier({ pkg: packageJson });
+if (notifier.update) {
+  notifier.notify({ defer: false });
+}
 consola.info(`Workspace: ${workspacePath}`);
 consola.info(`Config: ${opts.configFile}`);
 
