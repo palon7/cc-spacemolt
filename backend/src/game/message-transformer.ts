@@ -96,15 +96,12 @@ export function mergeStateUpdate(prev: GameState | null, update: StateUpdatePayl
         }))
       : base.modules,
     in_combat: update.in_combat ?? base.in_combat,
-    travel_progress:
-      update.travel_progress !== undefined ? update.travel_progress : base.travel_progress,
-    travel_destination:
-      update.travel_destination !== undefined ? update.travel_destination : base.travel_destination,
-    travel_type: update.travel_type !== undefined ? update.travel_type : base.travel_type,
-    travel_arrival_tick:
-      update.travel_arrival_tick !== undefined
-        ? update.travel_arrival_tick
-        : base.travel_arrival_tick,
+    // Travel fields: server omits these when not traveling, so treat
+    // missing (undefined) as null to clear stale travel state.
+    travel_progress: update.travel_progress ?? null,
+    travel_destination: update.travel_destination ?? null,
+    travel_type: update.travel_type ?? null,
+    travel_arrival_tick: update.travel_arrival_tick ?? null,
   };
 }
 
