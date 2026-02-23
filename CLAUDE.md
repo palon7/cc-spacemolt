@@ -6,8 +6,8 @@ Also connects to the SpaceMolt game server via WebSocket to display game state a
 ## Commands
 
 - `npm run dev` — backend + frontend
-- `npm run dev:backend` — backend only
-- `npm run dev:frontend` — frontend only
+- `npm run dev:backend` — backend (localhost:3001) only
+- `npm run dev:frontend` — frontend (localhost:5173) only
 - `npm run build`
 - `npm run test`
 - `npm run test:watch`
@@ -174,6 +174,7 @@ Configure via `data/config.json` (dev) or `~/.cc-spacemolt/config.json`. Main fi
 - Before wrapping up, always run `npm run check` to confirm there are no errors (runs typecheck, lint, format check, and tests).
 - When adding new features, actively consider writing tests.
 - Write docs and comments in English. Exception: translation files or language-specific files like `README-ja.md` should use their respective language.
+- Do not write obvious comments or comments that restate what the code clearly does.
 
 ## References
 
