@@ -27,7 +27,7 @@ export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mountedRef = useRef(false);
-  // O(1) id → array-index map; kept in sync with every setEntries call
+  // id → array-index cache for entry deduplication; rebuilt on clear_streaming and reset
   const entryIndexMapRef = useRef<Map<string, number>>(new Map());
 
   const connect = useCallback(() => {
@@ -79,22 +79,20 @@ export function useWebSocket() {
       switch (msg.type) {
         case 'entry': {
           const entry = msg.entry;
-          const indexMap = entryIndexMapRef.current;
-          const existingIndex = indexMap.get(entry.id);
-          if (existingIndex !== undefined) {
-            // O(1) update of an existing entry (streaming delta, finalization, or reconnect replay)
-            setEntries((prev) => {
+          setEntries((prev) => {
+            const indexMap = entryIndexMapRef.current;
+            const existingIndex = indexMap.get(entry.id);
+            // Verify the stored index still points to the same entry.
+            // It may be stale if entries were removed by a preceding clear_streaming.
+            if (existingIndex !== undefined && prev[existingIndex]?.id === entry.id) {
               const next = [...prev];
               next[existingIndex] = entry;
               return next;
-            });
-          } else {
-            // New entry — append and record its index
-            setEntries((prev) => {
-              indexMap.set(entry.id, prev.length);
-              return [...prev, entry];
-            });
-          }
+            }
+            // New entry or stale index — append and update map
+            indexMap.set(entry.id, prev.length);
+            return [...prev, entry];
+          });
           break;
         }
         case 'clear_streaming':
