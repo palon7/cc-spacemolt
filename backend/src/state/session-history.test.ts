@@ -197,6 +197,71 @@ describe('replaySession', () => {
     expect(meta).toBeNull();
   });
 
+  it('restores inputTokens and outputTokens from assistant message.usage', async () => {
+    const sessionId = '00000000-0000-0000-0000-000000000001';
+    const assistantWithUsage = {
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Hello' }],
+        usage: {
+          input_tokens: 100,
+          cache_creation_input_tokens: 50,
+          cache_read_input_tokens: 30,
+          output_tokens: 200,
+        },
+      },
+    };
+    writeSession(sessionId, [SYSTEM_MSG, assistantWithUsage, RESULT_MSG]);
+
+    const { meta } = await replaySession(tmpDir, sessionId);
+    expect(meta).not.toBeNull();
+    expect(meta!.inputTokens).toBe(180); // 100 + 50 + 30
+    expect(meta!.outputTokens).toBe(200);
+  });
+
+  it('uses the last assistant message.usage when multiple assistant messages are present', async () => {
+    const sessionId = '00000000-0000-0000-0000-000000000001';
+    const first = {
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'First' }],
+        usage: { input_tokens: 10, output_tokens: 20 },
+      },
+    };
+    const second = {
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Second' }],
+        usage: { input_tokens: 500, cache_read_input_tokens: 100, output_tokens: 80 },
+      },
+    };
+    writeSession(sessionId, [SYSTEM_MSG, first, second, RESULT_MSG]);
+
+    const { meta } = await replaySession(tmpDir, sessionId);
+    expect(meta!.inputTokens).toBe(600); // 500 + 100
+    expect(meta!.outputTokens).toBe(80);
+  });
+
+  it('leaves outputTokens at 0 when output_tokens is absent from usage', async () => {
+    const sessionId = '00000000-0000-0000-0000-000000000001';
+    const assistantNoOutput = {
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Hello' }],
+        usage: { input_tokens: 40 },
+      },
+    };
+    writeSession(sessionId, [SYSTEM_MSG, assistantNoOutput, RESULT_MSG]);
+
+    const { meta } = await replaySession(tmpDir, sessionId);
+    expect(meta!.inputTokens).toBe(40);
+    expect(meta!.outputTokens).toBe(0);
+  });
+
   it('skips malformed JSON lines', async () => {
     const sessionId = '00000000-0000-0000-0000-000000000001';
     const dir = path.join(tmpDir, sessionId);
