@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Monitor tool for Claude Code CLI playing SpaceMolt — real-time Web UI and game state dashboard",
-  "keywords": ["claude", "claude-code", "spacemolt", "ai", "agent", "game"],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "spacemolt",
+    "ai",
+    "agent",
+    "game"
+  ],
   "license": "MIT",
   "author": "Ryota Uno",
   "repository": {
@@ -14,11 +21,19 @@
     "url": "https://github.com/palon7/cc-spacemolt/issues"
   },
   "homepage": "https://github.com/palon7/cc-spacemolt#readme",
-  "files": ["bin/", "backend/dist/", "frontend/dist/"],
+  "files": [
+    "bin/",
+    "backend/dist/",
+    "frontend/dist/"
+  ],
   "bin": {
     "cc-spacemolt": "bin/cc-spacemolt.js"
   },
-  "workspaces": ["shared", "backend", "frontend"],
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "start": "node bin/cc-spacemolt.js",
     "prepublishOnly": "npm run build",
@@ -50,15 +65,5 @@
   },
   "engines": {
     "node": ">=22.0.0"
-  },
-  "dependencies": {
-    "@hono/node-server": "^1.14.0",
-    "@inquirer/prompts": "^8.2.1",
-    "commander": "^14.0.3",
-    "consola": "^3.4.2",
-    "hono": "^4.8.5",
-    "ora": "^9.3.0",
-    "update-notifier": "^7.3.1",
-    "ws": "^8.18.0"
   }
 }
