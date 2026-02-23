@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { ToolCallEntry, ToolResultEntry } from '@cc-spacemolt/shared';
 import { LuCheck, LuX } from 'react-icons/lu';
 
-// ─── G helpers: styled game-text spans ───────────────────────────────────────
+// G helpers: styled game-text spans
 const G = {
   item: (v: unknown): ReactNode => <span className="text-yellow-400 font-bold">{String(v)}</span>,
   system: (v: unknown): ReactNode => <span className="text-cyan-300 font-bold">{String(v)}</span>,
@@ -46,7 +46,7 @@ const G = {
   security: (v: unknown): ReactNode => <span className="text-blue-300">{String(v)}</span>,
 };
 
-// ─── Tool emoji ───────────────────────────────────────────────────────────────
+// Tool emoji
 const TOOL_EMOJI: Record<string, string> = {
   mine: '⛏️',
   travel: '🚀',
@@ -77,7 +77,7 @@ function getToolEmoji(shortName: string): string {
   return TOOL_EMOJI[shortName] ?? '⚪';
 }
 
-// ─── Action label + detail ────────────────────────────────────────────────────
+// Action label + detail
 const ACTION_LABELS: Record<string, string> = {
   mine: 'Mine',
   travel: 'Travel',
@@ -178,7 +178,7 @@ function formatActionDetail(shortName: string, input: Record<string, unknown>): 
   }
 }
 
-// ─── Result summary ───────────────────────────────────────────────────────────
+// Result summary
 interface ResultSummary {
   label: ReactNode;
   lines: ReactNode[];
@@ -691,7 +691,7 @@ function fGeneric(j: Record<string, unknown>): ResultSummary {
   return { label: '', lines };
 }
 
-// ─── Content formatter ────────────────────────────────────────────────────────
+// Content formatter
 function formatContent(raw: string): string {
   try {
     return JSON.stringify(JSON.parse(raw), null, 2);
@@ -700,7 +700,7 @@ function formatContent(raw: string): string {
   }
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// Main Component
 export function SpacemoltToolBlock({
   entry,
   result,

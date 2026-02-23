@@ -2,7 +2,7 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import type { GameState, TravelHistoryEntry } from '@cc-spacemolt/shared';
 import { useMapData, resolveSystem, type MapData } from '../hooks/useMapData';
 
-// ── display constants ────────────────────────────────────────────────
+// display constants
 const BG_COLOR = '#0a0a12';
 const EDGE_COLOR = 'rgba(70, 90, 130, 0.12)';
 const EDGE_WIDTH = 1;
@@ -84,7 +84,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
   const mapDataRef = useRef<MapData | null>(null);
   mapDataRef.current = mapData;
 
-  // ── ResizeObserver ──────────────────────────────────────────────────
+  // ResizeObserver
   const containerCallbackRef = useCallback((node: HTMLDivElement | null) => {
     containerRef.current = node;
   }, []);
@@ -107,7 +107,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     return () => observer.disconnect();
   }, [mapData]);
 
-  // ── Update animation target on system change ───────────────────────
+  // Update animation target on system change
   useEffect(() => {
     if (!mapData) return;
     const currentName = gameState.player.current_system;
@@ -126,7 +126,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     prevSystem.current = currentName;
   }, [gameState.player.current_system, mapData]);
 
-  // ── Re-center handler ──────────────────────────────────────────────
+  // Re-center handler
   const handleRecenter = useCallback(() => {
     const md = mapDataRef.current;
     const gs = gameStateRef.current;
@@ -137,7 +137,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     setTracking(true);
   }, []);
 
-  // ── Drag + wheel ───────────────────────────────────────────────────
+  // Drag + wheel
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -186,7 +186,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     };
 
-    // ── Touch events ──────────────────────────────────────────────
+    // Touch events
     let pinchStartDist = 0;
     let pinchStartZoom = 0;
     // Cached bounding rect for pinch zoom — avoids triggering layout reflow
@@ -296,7 +296,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     };
   }, [mapData]);
 
-  // ── Main render loop ───────────────────────────────────────────────
+  // Main render loop
   useEffect(() => {
     const loop = () => {
       const md = mapDataRef.current;
@@ -373,7 +373,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     </div>
   );
 
-  // ── Drawing function ───────────────────────────────────────────────
+  // Drawing function
   function draw(ctx: CanvasRenderingContext2D, md: MapData, gs: GameState): void {
     const { w: W, h: H } = canvasSize.current;
     if (W === 0 || H === 0) return;
@@ -403,7 +403,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     const currentSys = resolveSystem(md, gs.player.current_system);
     const destSys = gs.travel_destination ? resolveSystem(md, gs.travel_destination) : null;
 
-    // ── Edges ──────────────────────────────────────────────────────
+    // Edges
     ctx.strokeStyle = EDGE_COLOR;
     ctx.lineWidth = EDGE_WIDTH;
     const drawnEdges = new Set<string>();
@@ -428,7 +428,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     }
 
-    // ── Travel history routes ──────────────────────────────────────
+    // Travel history routes
     if (showHistoryRef.current && routeCountsRef.current.size > 0) {
       ctx.lineWidth = 2;
       for (const [key, count] of routeCountsRef.current) {
@@ -448,7 +448,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     }
 
-    // ── Travel line ────────────────────────────────────────────────
+    // Travel line
     if (currentSys && destSys) {
       const [ax, ay] = toScreen(currentSys.x, currentSys.y);
       const [bx, by] = toScreen(destSys.x, destSys.y);
@@ -473,7 +473,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     }
 
-    // ── Nodes ──────────────────────────────────────────────────────
+    // Nodes
     for (const sys of md.systems) {
       const [sx, sy] = toScreen(sys.x, sys.y);
       if (!inView(sx, sy)) continue;
@@ -526,7 +526,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       ctx.fill();
     }
 
-    // ── Labels ─────────────────────────────────────────────────────
+    // Labels
     const cx = cw / 2;
     const cy = ch / 2;
 

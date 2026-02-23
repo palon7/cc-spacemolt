@@ -22,9 +22,7 @@ export async function runSetupWizard(configFile: string, defaultConfigDir: strin
   console.log(bigLogoText);
   console.log("\nWelcome! config.json was not found. Let's configure cc-spacemolt.");
 
-  // ─────────────────────────────────────────
   // Step 1: Language
-  // ─────────────────────────────────────────
   printSectionHeader('Step 1/5 · Language');
   const langChoices = Object.entries(languages).map(([value, name]) => ({
     name,
@@ -50,9 +48,7 @@ export async function runSetupWizard(configFile: string, defaultConfigDir: strin
 
   const t = getMessages(uiLanguage);
 
-  // ─────────────────────────────────────────
   // Step 2: Workspace
-  // ─────────────────────────────────────────
   printSectionHeader(t.setup.step2.header);
   console.log(t.setup.step2.desc);
   console.log('');
@@ -78,9 +74,7 @@ export async function runSetupWizard(configFile: string, defaultConfigDir: strin
     console.log(t.setup.step2.defaultWs(workspacePath));
   }
 
-  // ─────────────────────────────────────────
   // Step 3: SpaceMolt account
-  // ─────────────────────────────────────────
   printSectionHeader(t.setup.step3.header);
 
   const hasCredentials = await confirm({
@@ -101,9 +95,7 @@ export async function runSetupWizard(configFile: string, defaultConfigDir: strin
     envContent = `SPACEMOLT_USERNAME=\nSPACEMOLT_PASSWORD=\nREGISTER_CODE=${registerCode.trim()}\n`;
   }
 
-  // ─────────────────────────────────────────
   // Step 4: Permissions
-  // ─────────────────────────────────────────
   printSectionHeader(t.setup.step4.header);
 
   const permissionLevel = await select({
@@ -115,9 +107,7 @@ export async function runSetupWizard(configFile: string, defaultConfigDir: strin
   });
   const dangerouslySkipPermissions = permissionLevel === 'skip';
 
-  // ─────────────────────────────────────────
   // Step 5: Claude model
-  // ─────────────────────────────────────────
   printSectionHeader(t.setup.step5.header);
 
   const modelChoice = await select({
@@ -138,9 +128,7 @@ export async function runSetupWizard(configFile: string, defaultConfigDir: strin
     model = modelChoice;
   }
 
-  // ─────────────────────────────────────────
   // Write config.json
-  // ─────────────────────────────────────────
   const config: AppConfig = {
     ...DEFAULT_CONFIG,
     language: agentLanguage,
@@ -172,9 +160,7 @@ export async function runSetupWizard(configFile: string, defaultConfigDir: strin
     fs.writeFileSync(envPath, envContent, 'utf-8');
   }
 
-  // ─────────────────────────────────────────
   // Complete
-  // ─────────────────────────────────────────
   console.log('\n');
   console.log('╔══════════════════════════════════════════════════════╗');
   console.log('║                  Setup complete!                     ║');
