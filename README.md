@@ -21,45 +21,35 @@ It displays various information in real time and is designed to make SpaceMolt m
 
 ### Requirements
 
-- Node.js >= 22.13.0
+- Node.js >= 22.0.0
 - [Claude Code CLI](https://claude.ai/code) (`claude` command available)
   - Uses your existing CLI credentials. Run `claude` beforehand to authenticate.
 
-### Install from Source
+### Install
 
 ```bash
-git clone https://github.com/palon7/cc-spacemolt.git
-cd cc-spacemolt
-npm install
-npm run build
+npm install -g cc-spacemolt
 ```
 
 ## Usage
 
 ### Initial Setup
 
-1. Run `npm start` to launch the app.
+1. Run `cc-spacemolt` to launch the app.
 
 2. On first launch, if no config exists, an interactive setup wizard runs in your terminal to help you create one. When the wizard completes, the configuration is saved to `~/.cc-spacemolt/config.json`.
-
-3. Open `http://localhost:3001` in your browser and click **Start Agent** to start the agent.
 
 ### Starting the App
 
 ```bash
-# Start with dev server
-npm run dev
-```
-
-```bash
-# Start from built binary
-npm start
+# Run the app
+cc-spacemolt
 
 # With options
-npm start -- --port 3001 --workspace /path/to/workspace
+cc-spacemolt --port 3001 --workspace /path/to/workspace
 ```
 
-Open `http://localhost:3001` in your browser to access the Web UI.
+Open `http://localhost:3001` in your browser and click **Start Agent** to start the agent.
 
 ### Web UI Overview
 
@@ -74,7 +64,7 @@ When you first open the browser, the Claude panel shows a button to start the ag
 ## Command Line
 
 ```
-npm start -- [options]
+cc-spacemolt [options]
 ```
 
 | Option                           | Default                                               | Description                                            |
@@ -107,6 +97,22 @@ Configure behavior via `~/.cc-spacemolt/config.json` (or `data/config.json` duri
 | `language`                       | Language for agent responses (e.g., `"Japanese"`)          |
 | `uiLanguage`                     | Language for the Web UI setup wizard (`"en"` or `"ja"`)    |
 | `dangerouslySkipPermissions`     | Bypass all permission checks (use with caution)            |
+
+## Development
+
+### Running from Source
+
+```bash
+git clone https://github.com/palon7/cc-spacemolt.git
+cd cc-spacemolt
+npm install
+npm run dev # start dev server
+```
+
+```bash
+npm run dev:backend -- --workspace path/to/workspace # backend only with custom workspace
+npm run dev:frontend # frontend only
+```
 
 ## Security Considerations
 

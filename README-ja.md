@@ -19,45 +19,35 @@
 
 ### 必要なもの
 
-- Node.js >= 22.13.0
+- Node.js >= 22.0.0
 - [Claude Code CLI](https://claude.ai/code) (`claude` コマンドが使える状態)
   - 認証情報は現在のCLIのものをそのまま使用します。事前に`claude` コマンドを実行して認証しておいてください
 
-### ソースコードからインストール
+### インストール
 
 ```bash
-git clone https://github.com/palon7/cc-spacemolt.git
-cd cc-spacemolt
-npm install
-npm run build
+npm install -g cc-spacemolt
 ```
 
 ## 使い方
 
 ### 初回セットアップ
 
-1. `npm start` を実行してアプリを起動します。
+1. `cc-spacemolt` を実行してアプリを起動します。
 
 2. 初回起動時に設定ファイルが存在しない場合、ターミナルで対話型のセットアップウィザードが起動します。ウィザード完了後、設定は `~/.cc-spacemolt/config.json` に保存されます。
-
-3. ブラウザで `http://localhost:3001` を開き、Start Agent ボタンをクリックしてエージェントを起動します。
 
 ### 起動
 
 ```bash
-# 開発サーバーで起動
-npm run dev
-```
-
-```bash
-# ビルド済みバイナリから起動
-npm start
+# npm からインストールした場合
+cc-spacemolt
 
 # オプションを指定する場合
-npm start -- --port 3001 --workspace /path/to/workspace
+cc-spacemolt --port 3001 --workspace /path/to/workspace
 ```
 
-ブラウザで `http://localhost:3001` を開くと Web UI が表示されます。
+ブラウザで `http://localhost:3001` を開くと Web UI が表示されます。Start Agent ボタンをクリックしてエージェントを起動してください。
 
 ### Web UI の使い方
 
@@ -74,7 +64,7 @@ Claude パネルのテキスト入力でいつでもエージェントに指示�
 ## コマンドライン
 
 ```
-npm start -- [options]
+cc-spacemolt [options]
 ```
 
 | オプション                       | デフォルト                                                   | 説明                                                 |
@@ -87,7 +77,7 @@ npm start -- [options]
 | `--debug`                        | —                                                            | デバッグログを有効化                                 |
 | `--dangerously-skip-permissions` | —                                                            | 全ての権限確認をスキップ                             |
 
-コマンドライン引数は設定ファイルの内容を上書きします。
+コマンドライン引数は設定ファイルの内容より優先されます。
 
 ## 設定
 
@@ -107,6 +97,22 @@ npm start -- [options]
 | `language`                       | エージェントとの会話言語（例: `"Japanese"`）                         |
 | `uiLanguage`                     | Web UI セットアップウィザードの言語（`"en"` または `"ja"`）          |
 | `dangerouslySkipPermissions`     | 全ての権限確認をスキップ（`true` にする場合は十分注意してください）  |
+
+## 開発
+
+### ソースコードからの起動
+
+```bash
+git clone https://github.com/palon7/cc-spacemolt.git
+cd cc-spacemolt
+npm install
+npm run dev # 開発サーバーを起動
+```
+
+```bash
+npm run dev:backend -- --workspace path/to/workspace # バックエンドのみを引数を渡して起動
+npm run dev:frontend # フロントエンドのみ起動
+```
 
 ## セキュリティについての考慮事項
 
