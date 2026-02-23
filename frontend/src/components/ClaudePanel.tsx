@@ -121,9 +121,9 @@ export function ClaudePanel({
     if (status === 'idle') sessionList.refresh();
   }, [status, sessionList.refresh]);
 
-  const handleShowHistory = useCallback(async () => {
-    await sessionList.refresh();
+  const handleShowHistory = useCallback(() => {
     setShowHistory(true);
+    sessionList.refresh();
   }, [sessionList]);
 
   const isRunning = status === 'running' || status === 'starting';

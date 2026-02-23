@@ -140,6 +140,12 @@ function getDisplayLabel(type: string, payload: unknown): string | undefined {
   return undefined;
 }
 
+function formatUsername(content: { username?: string; clan_tag?: string }): string {
+  const name = content.username ?? '?';
+  const clan = content.clan_tag ? ` [${content.clan_tag}]` : '';
+  return name + clan;
+}
+
 export function transformEventMessage(type: string, payload: unknown): GameEvent {
   const summary = summarize(type, payload);
   const label = getDisplayLabel(type, payload);
@@ -191,11 +197,11 @@ function summarize(type: string, payload: unknown): string {
     }
     case 'poi_arrival': {
       const p = asPayload<PoiMovementPayload>(payload);
-      return `${p.username ?? '?'}(clan=${p.clan_tag || 'No clan'}) arrived at ${p.poi_name ?? '?'}`;
+      return `${formatUsername(p)} arrived at ${p.poi_name ?? '?'}`;
     }
     case 'poi_departure': {
       const p = asPayload<PoiMovementPayload>(payload);
-      return `${p.username ?? '?'}(clan=${p.clan_tag || 'No clan'}) departed from ${p.poi_name ?? '?'}`;
+      return `${formatUsername(p)} departed from ${p.poi_name ?? '?'}`;
     }
     case 'scan_detected': {
       const p = asPayload<ScanDetectedPayload>(payload);
