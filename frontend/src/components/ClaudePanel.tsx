@@ -117,14 +117,15 @@ export function ClaudePanel({
   }, [resetSession]);
 
   const sessionList = useSessionList();
+  const { refresh: refreshSessionList } = sessionList;
   useEffect(() => {
-    if (status === 'idle') sessionList.refresh();
-  }, [status, sessionList.refresh]);
+    if (status === 'idle') refreshSessionList();
+  }, [status, refreshSessionList]);
 
   const handleShowHistory = useCallback(() => {
     setShowHistory(true);
-    sessionList.refresh();
-  }, [sessionList]);
+    refreshSessionList();
+  }, [refreshSessionList]);
 
   const isRunning = status === 'running' || status === 'starting';
   const supportsInput = sessionMeta?.supportsInput ?? true;

@@ -181,7 +181,8 @@ function summarize(type: string, payload: unknown): string {
     case 'pirate_combat': {
       const p = asPayload<PirateCombatPayload>(payload);
       const bossTag = p.is_boss ? ' [BOSS]' : '';
-      return `${p.pirate_name ?? '?'}${bossTag} dealt ${p.damage ?? '?'} ${p.damage_type ?? ''} damage. Hull: ${p.your_hull ?? '?'}/${p.your_max_hull ?? '?'} Shield: ${p.your_shield ?? '?'}`;
+      const damageType = p.damage_type ? ` ${p.damage_type}` : ' unknown';
+      return `${p.pirate_name ?? '?'}${bossTag} dealt ${p.damage ?? '?'}${damageType} damage. Hull: ${p.your_hull ?? '?'}/${p.your_max_hull ?? '?'} Shield: ${p.your_shield ?? '?'}`;
     }
     case 'action_result': {
       const p = asPayload<ActionResultPayload>(payload);
