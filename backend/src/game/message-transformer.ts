@@ -17,6 +17,9 @@ import type {
   OkPayload,
   ReconnectedPayload,
   StateChangePayload,
+  PirateWarningPayload,
+  PirateCombatPayload,
+  ActionResultPayload,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -162,7 +165,24 @@ function summarize(type: string, payload: unknown): string {
     }
     case 'mining_yield': {
       const p = asPayload<MiningYieldPayload>(payload);
-      return `Resource: ${p.resource_id ?? '?'} Quantity: ${p.quantity ?? '?'} Remaining: ${p.remaining ?? '?'}`;
+      const name = p.resource_name ?? p.resource_id ?? '?';
+      const remaining = p.remaining_display ?? p.remaining ?? '?';
+      return `${name} x${p.quantity ?? '?'} (${remaining} remaining)`;
+    }
+    case 'pirate_warning': {
+      const p = asPayload<PirateWarningPayload>(payload);
+      const bossTag = p.is_boss ? ' [BOSS]' : '';
+      const delay = p.delay_ticks ? ` (in ${p.delay_ticks} ticks)` : '';
+      return `${p.pirate_name ?? '?'} (${p.pirate_tier ?? '?'}${bossTag}) detected you!${delay}`;
+    }
+    case 'pirate_combat': {
+      const p = asPayload<PirateCombatPayload>(payload);
+      const bossTag = p.is_boss ? ' [BOSS]' : '';
+      return `${p.pirate_name ?? '?'}${bossTag} dealt ${p.damage ?? '?'} ${p.damage_type ?? ''} damage. Hull: ${p.your_hull ?? '?'}/${p.your_max_hull ?? '?'} Shield: ${p.your_shield ?? '?'}`;
+    }
+    case 'action_result': {
+      const p = asPayload<ActionResultPayload>(payload);
+      return p.result?.message ?? `${p.command ?? '?'} completed`;
     }
     case 'chat_message': {
       const p = asPayload<ChatMessagePayload>(payload);
@@ -174,11 +194,11 @@ function summarize(type: string, payload: unknown): string {
     }
     case 'poi_arrival': {
       const p = asPayload<PoiMovementPayload>(payload);
-      return `${p.username ?? '?'}(clan=${p.clan_tag ?? 'No clan'}) arrived at ${p.poi_name ?? '?'}`;
+      return `${p.username ?? '?'}(clan=${p.clan_tag || 'No clan'}) arrived at ${p.poi_name ?? '?'}`;
     }
     case 'poi_departure': {
       const p = asPayload<PoiMovementPayload>(payload);
-      return `${p.username ?? '?'}(clan=${p.clan_tag ?? 'No clan'}) departed from ${p.poi_name ?? '?'}`;
+      return `${p.username ?? '?'}(clan=${p.clan_tag || 'No clan'}) departed from ${p.poi_name ?? '?'}`;
     }
     case 'scan_detected': {
       const p = asPayload<ScanDetectedPayload>(payload);
@@ -216,7 +236,8 @@ function summarize(type: string, payload: unknown): string {
     }
     case 'reconnected': {
       const p = asPayload<ReconnectedPayload>(payload);
-      return `${p.message ?? 'Reconnected'}${p.was_pilotless ? ' (was pilotless)' : ''} Next tick: ${p.tick ?? '?'}`;
+      const ticks = p.ticks_remaining ?? p.tick ?? '?';
+      return `${p.message ?? 'Reconnected'}${p.was_pilotless ? ' (was pilotless)' : ''} Ticks remaining: ${ticks}`;
     }
     case 'trade_offer_received': {
       const p = asPayload<TradeOfferPayload>(payload);

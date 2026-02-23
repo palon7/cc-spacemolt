@@ -9,9 +9,13 @@ const EVT_BADGE: Record<string, string> = {
   chat_message: 'bg-sky-500/15 text-sky-300 border-sky-500/20',
   skill_level_up: 'bg-violet-500/15 text-violet-400 border-violet-500/20',
   combat_update: 'bg-red-500/15 text-red-400 border-red-500/20',
+  pirate_warning: 'bg-orange-500/15 text-orange-400 border-orange-500/20',
+  pirate_combat: 'bg-red-600/15 text-red-400 border-red-600/20',
   poi_arrival: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
+  poi_departure: 'bg-amber-500/10 text-amber-400 border-amber-500/15',
   trade_offer_received: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20',
   scan_detected: 'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/20',
+  action_result: 'bg-purple-500/15 text-purple-400 border-purple-500/20',
 };
 
 const EVT_LABEL: Record<string, string> = {
@@ -21,21 +25,29 @@ const EVT_LABEL: Record<string, string> = {
   chat_message: 'CHAT',
   skill_level_up: 'SKILL UP',
   combat_update: 'COMBAT',
+  pirate_warning: 'PIRATE',
+  pirate_combat: 'COMBAT',
   poi_arrival: 'ARRIVAL',
+  poi_departure: 'DEPART',
   trade_offer_received: 'TRADE',
   scan_detected: 'SCAN',
+  action_result: 'ACTION',
 };
 
 const FILTERS = [
   { key: 'all', label: 'All', types: null as string[] | null },
   { key: 'chat', label: 'Chat', types: ['chat_message'] },
-  { key: 'combat', label: 'Combat', types: ['combat_update', 'scan_detected'] },
+  {
+    key: 'combat',
+    label: 'Combat',
+    types: ['pirate_warning', 'pirate_combat', 'combat_update', 'scan_detected'],
+  },
   { key: 'system', label: 'System', types: ['ok', 'state_change'] },
   { key: 'mining', label: 'Mining', types: ['mining_yield'] },
   {
     key: 'social',
     label: 'Social',
-    types: ['poi_arrival', 'trade_offer_received', 'skill_level_up'],
+    types: ['poi_arrival', 'poi_departure', 'trade_offer_received', 'skill_level_up'],
   },
 ];
 
