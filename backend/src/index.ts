@@ -38,7 +38,21 @@ program
   )
   .option('--host <hostname>', 'Bind hostname', 'localhost')
   .option('--debug', 'Write debug log to debug.log')
-  .option('--dangerously-skip-permissions', 'Bypass all permission checks');
+  .option('--dangerously-skip-permissions', 'Bypass all permission checks')
+  .option(
+    '--claude-env <KEY=VALUE>',
+    'Environment variable for Claude CLI (repeatable)',
+    (value: string, prev: Record<string, string>) => {
+      const eqIndex = value.indexOf('=');
+      if (eqIndex < 1) {
+        throw new InvalidArgumentError('Must be in KEY=VALUE format.');
+      }
+      const key = value.slice(0, eqIndex);
+      const val = value.slice(eqIndex + 1);
+      return { ...prev, [key]: val };
+    },
+    {} as Record<string, string>,
+  );
 
 const argv = process.argv.slice(2);
 if (argv[0] === '--') argv.shift();
@@ -121,6 +135,12 @@ debug('main', 'Resolved paths:', { configFile: opts.configFile, logDir, workspac
 
 const bypassPermissions =
   opts.dangerouslySkipPermissions || config.dangerouslySkipPermissions === true;
+
+// Merge CLI --claude-env into config (CLI overrides config)
+const cliClaudeEnv: Record<string, string> = opts.claudeEnv;
+if (Object.keys(cliClaudeEnv).length > 0) {
+  config.claudeEnv = { ...config.claudeEnv, ...cliClaudeEnv };
+}
 
 debug('main', 'Creating ClaudeCliProvider');
 const provider = new ClaudeCliProvider({

@@ -50,6 +50,12 @@ export interface AppConfig {
 
   /** Skip all permission checks (equivalent to --dangerously-skip-permissions) */
   dangerouslySkipPermissions?: boolean;
+
+  /** Additional CLI arguments appended to the Claude CLI command */
+  claudeArgs?: string[];
+
+  /** Environment variables applied when launching the Claude CLI process */
+  claudeEnv?: Record<string, string>;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -130,5 +136,9 @@ function mergeConfig(defaults: AppConfig, partial: Partial<AppConfig>): AppConfi
     uiLanguage: partial.uiLanguage ?? defaults.uiLanguage,
     dangerouslySkipPermissions:
       partial.dangerouslySkipPermissions ?? defaults.dangerouslySkipPermissions,
+    claudeArgs: partial.claudeArgs ?? defaults.claudeArgs,
+    claudeEnv: partial.claudeEnv
+      ? { ...defaults.claudeEnv, ...partial.claudeEnv }
+      : defaults.claudeEnv,
   };
 }

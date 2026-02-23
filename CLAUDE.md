@@ -135,6 +135,7 @@ cc-spacemolt/
 | `--host <hostname>`              | `localhost`                                           | Bind hostname          |
 | `--debug`                        | —                                                     | Enable debug logging   |
 | `--dangerously-skip-permissions` | —                                                     | Bypass all permissions |
+| `--claude-env <KEY=VALUE>`       | —                                                     | Env var for Claude CLI (repeatable) |
 
 Priority order: CLI args > config.json values > defaults
 
@@ -151,6 +152,8 @@ Configure via `data/config.json` (dev) or `~/.cc-spacemolt/config.json`. Main fi
 - `workspacePath` — working directory for Claude CLI
 - `language` — response language
 - `dangerouslySkipPermissions` — bypass all permissions
+- `claudeArgs` — additional CLI arguments appended to the Claude CLI command (string[])
+- `claudeEnv` — environment variables applied when launching the Claude CLI process (Record<string, string>)
 
 ## Testing
 
