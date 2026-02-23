@@ -1,190 +1,7 @@
-import { useState } from 'react';
 import type { ReactNode } from 'react';
-import type { ToolCallEntry, ToolResultEntry } from '@cc-spacemolt/shared';
-import { LuCheck, LuX } from 'react-icons/lu';
+import { G, type ResultSummary } from './GameText';
 
-// G helpers: styled game-text spans
-const G = {
-  item: (v: unknown): ReactNode => <span className="text-yellow-400 font-bold">{String(v)}</span>,
-  system: (v: unknown): ReactNode => <span className="text-cyan-300 font-bold">{String(v)}</span>,
-  poi: (v: unknown): ReactNode => <span className="text-purple-400">{String(v)}</span>,
-  credits: (v: unknown): ReactNode => (
-    <>
-      <span className="text-green-400">{String(v)}</span>
-      <span className="text-green-400/60">cr</span>
-    </>
-  ),
-  player: (v: unknown): ReactNode => <span className="text-white font-bold">{String(v)}</span>,
-  qty: (v: unknown): ReactNode => (
-    <>
-      <span className="text-yellow-400/60">x</span>
-      <span className="text-yellow-400">{String(v)}</span>
-    </>
-  ),
-  ship: (v: unknown): ReactNode => <span className="text-blue-400 font-bold">{String(v)}</span>,
-  fuel: (cur: unknown, max: unknown): ReactNode => (
-    <span className="text-yellow-400">
-      {String(cur)}/{String(max)}
-    </span>
-  ),
-  cargo: (cur: unknown, max: unknown): ReactNode => (
-    <span className="text-cyan-400">
-      {String(cur)}/{String(max)}
-    </span>
-  ),
-  damage: (v: unknown): ReactNode => (
-    <span className="text-red-400 font-bold">{String(v)} dmg</span>
-  ),
-  xp: (label: string, v: unknown): ReactNode => (
-    <span className="text-cyan-400">
-      +{String(v)} {label} XP
-    </span>
-  ),
-  channel: (v: unknown): ReactNode => <span className="text-cyan-400">{String(v)}</span>,
-  dim: (v: unknown): ReactNode => <span className="text-zinc-500">{String(v)}</span>,
-  empire: (v: unknown): ReactNode => <span className="text-orange-400">{String(v)}</span>,
-  security: (v: unknown): ReactNode => <span className="text-blue-300">{String(v)}</span>,
-};
-
-// Tool emoji
-const TOOL_EMOJI: Record<string, string> = {
-  mine: '⛏️',
-  travel: '🚀',
-  jump: '🚀',
-  dock: '🛬',
-  undock: '🛫',
-  login: '🔑',
-  get_status: '📊',
-  sell: '💰',
-  buy: '🛒',
-  craft: '🔧',
-  refuel: '⛽',
-  deposit_items: '📦',
-  withdraw_items: '📤',
-  get_notifications: '🔔',
-  chat: '💬',
-  get_ship: '🚢',
-  get_poi: '📍',
-  view_market: '🏪',
-  get_system: '🌐',
-  scan: '🔍',
-  attack: '⚔️',
-  forum_reply: '💬',
-  captains_log_add: '📓',
-};
-
-function getToolEmoji(shortName: string): string {
-  return TOOL_EMOJI[shortName] ?? '⚪';
-}
-
-// Action label + detail
-const ACTION_LABELS: Record<string, string> = {
-  mine: 'Mine',
-  travel: 'Travel',
-  jump: 'Jump',
-  dock: 'Dock',
-  undock: 'Undock',
-  login: 'Login',
-  get_status: 'Status',
-  sell: 'Sell',
-  buy: 'Buy',
-  craft: 'Craft',
-  refuel: 'Refuel',
-  deposit_items: 'Deposit',
-  withdraw_items: 'Withdraw',
-  get_notifications: 'Notif',
-  chat: 'Chat',
-  get_ship: 'Ship',
-  get_poi: 'POI',
-  view_market: 'Market',
-  get_system: 'System',
-  scan: 'Scan',
-  attack: 'Attack',
-  forum_reply: 'Forum',
-  captains_log_add: 'Log',
-};
-
-function getActionLabel(shortName: string): string {
-  return ACTION_LABELS[shortName] ?? shortName;
-}
-
-function formatActionDetail(shortName: string, input: Record<string, unknown>): ReactNode | null {
-  const itemId = input.item_id ?? input.item_name ?? '';
-  const qty = input.quantity;
-
-  switch (shortName) {
-    case 'travel':
-      return <>→ {G.poi(input.target_poi ?? '')}</>;
-    case 'jump':
-      return <>→ {G.system(input.target_system ?? '')}</>;
-    case 'sell':
-    case 'buy':
-      return qty !== undefined ? (
-        <>
-          {G.item(itemId)} {G.qty(qty)}
-        </>
-      ) : (
-        <>{G.item(itemId)}</>
-      );
-    case 'craft': {
-      const recipe = input.recipe_id ?? itemId;
-      return qty !== undefined ? (
-        <>
-          {G.item(recipe)} {G.qty(qty)}
-        </>
-      ) : (
-        <>{G.item(recipe)}</>
-      );
-    }
-    case 'deposit_items':
-    case 'withdraw_items':
-      return qty !== undefined ? (
-        <>
-          {G.item(itemId)} {G.qty(qty)}
-        </>
-      ) : (
-        <>{G.item(itemId)}</>
-      );
-    case 'chat': {
-      const ch = input.channel ?? '';
-      const msg = String(input.content ?? input.message ?? '');
-      return (
-        <>
-          [{G.channel(ch)}]: {msg.length > 40 ? msg.slice(0, 40) + '…' : msg}
-        </>
-      );
-    }
-    case 'view_market': {
-      const mItem = input.item_id;
-      return mItem ? <>{G.item(mItem)}</> : null;
-    }
-    case 'scan':
-      return <>{G.player(input.target_id ?? input.target_name ?? '')}</>;
-    case 'attack':
-      return <>→ {G.player(input.target_id ?? input.target_name ?? '')}</>;
-    default: {
-      const filtered = Object.entries(input).filter(([k]) => k !== 'session_id');
-      if (filtered.length === 0) return null;
-      const paramStr = filtered
-        .slice(0, 3)
-        .map(([k, v]) => {
-          if (k === 'password') return `${k}: ****`;
-          const val = typeof v === 'string' ? v : JSON.stringify(v);
-          return `${k}: ${val.slice(0, 30)}`;
-        })
-        .join(', ');
-      return paramStr;
-    }
-  }
-}
-
-// Result summary
-interface ResultSummary {
-  label: ReactNode;
-  lines: ReactNode[];
-}
-
-function parseResultSummary(shortName: string, content: string): ResultSummary {
+export function parseResultSummary(shortName: string, content: string): ResultSummary {
   let json: Record<string, unknown> | null = null;
   try {
     json = JSON.parse(content) as Record<string, unknown>;
@@ -242,6 +59,44 @@ function formatJsonResult(shortName: string, json: Record<string, unknown>): Res
       return fScan(json);
     case 'attack':
       return fAttack(json);
+    case 'forum_reply':
+      return fForumReply(json);
+    case 'captains_log_add':
+      return fCaptainsLog(json);
+    case 'accept_mission':
+      return fAcceptMission(json);
+    case 'complete_mission':
+      return fCompleteMission(json);
+    case 'get_missions':
+      return fMissions(json);
+    case 'get_active_missions':
+      return fActiveMissions(json);
+    case 'find_route':
+      return fRoute(json);
+    case 'search_systems':
+      return fSearchSystems(json);
+    case 'get_cargo':
+      return fCargo(json);
+    case 'estimate_purchase':
+      return fEstimate(json);
+    case 'faction_info':
+      return fFactionInfo(json);
+    case 'faction_list':
+      return fFactionList(json);
+    case 'forum_list':
+      return fForumList(json);
+    case 'forum_get_thread':
+      return fForumThread(json);
+    case 'buy_insurance':
+      return fBuyInsurance(json);
+    case 'get_insurance_quote':
+      return fInsuranceQuote(json);
+    case 'shipyard_showroom':
+      return fShipyard(json);
+    case 'get_chat_history':
+      return fChatHistory(json);
+    case 'get_commands':
+      return fCommands(json);
     default:
       return fGeneric(json);
   }
@@ -670,6 +525,345 @@ function fAttack(j: Record<string, unknown>): ResultSummary {
   };
 }
 
+function fForumReply(j: Record<string, unknown>): ResultSummary {
+  const msg = typeof j.message === 'string' ? j.message : 'Reply posted';
+  return { label: msg.length > 80 ? msg.slice(0, 80) + '…' : msg, lines: [] };
+}
+
+function fCaptainsLog(j: Record<string, unknown>): ResultSummary {
+  const at = typeof j.created_at === 'string' ? ` (${j.created_at})` : '';
+  return { label: <>Log entry added{G.dim(at)}</>, lines: [] };
+}
+
+function fAcceptMission(j: Record<string, unknown>): ResultSummary {
+  const title = String(j.title ?? j.mission_id ?? 'Mission');
+  const type = String(j.type ?? '');
+  return {
+    label: (
+      <>
+        {title}
+        {type ? <> ({G.dim(type)})</> : null}
+      </>
+    ),
+    lines: [],
+  };
+}
+
+function fCompleteMission(j: Record<string, unknown>): ResultSummary {
+  const msg = typeof j.message === 'string' ? j.message : 'Mission completed';
+  return { label: msg.length > 80 ? msg.slice(0, 80) + '…' : msg, lines: [] };
+}
+
+function fMissions(j: Record<string, unknown>): ResultSummary {
+  const missions = j.missions as Array<Record<string, unknown>> | undefined;
+  const count = missions?.length ?? 0;
+  const lines: ReactNode[] = (missions ?? []).slice(0, 3).map((m, i) => {
+    const title = String(m.title ?? m.mission_id ?? '');
+    const diff = m.difficulty !== undefined ? ` [diff:${String(m.difficulty)}]` : '';
+    return (
+      <span key={i}>
+        {title}
+        {G.dim(diff)}
+      </span>
+    );
+  });
+  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{count}</span> mission(s)
+      </>
+    ),
+    lines,
+  };
+}
+
+function fActiveMissions(j: Record<string, unknown>): ResultSummary {
+  const missions = j.missions as Array<Record<string, unknown>> | undefined;
+  const count = missions?.length ?? 0;
+  const lines: ReactNode[] = (missions ?? []).slice(0, 3).map((m, i) => {
+    const title = String(m.title ?? m.mission_id ?? '');
+    const progress = (m.progress as Record<string, unknown> | undefined)?.percent_complete;
+    const pct = progress !== undefined ? ` ${String(progress)}%` : '';
+    return (
+      <span key={i}>
+        {title}
+        {G.dim(pct)}
+      </span>
+    );
+  });
+  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{count}</span> active mission(s)
+      </>
+    ),
+    lines,
+  };
+}
+
+function fRoute(j: Record<string, unknown>): ResultSummary {
+  const found = j.found as boolean | undefined;
+  if (!found) return { label: G.dim('No route found'), lines: [] };
+  const route = j.route as Array<Record<string, unknown>> | undefined;
+  const hops = route?.length ?? 0;
+  const dest = route && route.length > 0 ? String(route[route.length - 1].name ?? '') : '';
+  const lines: ReactNode[] = (route ?? []).slice(0, 5).map((s, i) => (
+    <span key={i}>
+      {i > 0 ? '→ ' : ''}
+      {G.system(s.name ?? s.system_id ?? '')}
+    </span>
+  ));
+  if (hops > 5) lines.push(G.dim(`(+${hops - 5} more)`));
+  return {
+    label: (
+      <>
+        Route to {G.system(dest)} ({G.dim(`${hops} hops`)})
+      </>
+    ),
+    lines,
+  };
+}
+
+function fSearchSystems(j: Record<string, unknown>): ResultSummary {
+  const systems = j.systems as Array<Record<string, unknown>> | undefined;
+  const total = j.total_found ?? systems?.length ?? 0;
+  const lines: ReactNode[] = (systems ?? []).slice(0, 5).map((s, i) => {
+    const name = String(s.name ?? s.system_id ?? '');
+    const emp = s.empire ? ` (${String(s.empire)})` : '';
+    return (
+      <span key={i}>
+        {G.system(name)}
+        {G.dim(emp)}
+      </span>
+    );
+  });
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{String(total)}</span> system(s) found
+      </>
+    ),
+    lines,
+  };
+}
+
+function fCargo(j: Record<string, unknown>): ResultSummary {
+  const used = j.used ?? '?';
+  const capacity = j.capacity ?? '?';
+  const cargo = j.cargo as Array<Record<string, unknown>> | undefined;
+  const lines: ReactNode[] = (cargo ?? []).slice(0, 5).map((c, i) => {
+    const name = String(c.name ?? c.item_id ?? '');
+    const qty = c.quantity;
+    return (
+      <span key={i}>
+        {G.item(name)}
+        {qty !== undefined ? <> {G.qty(qty)}</> : null}
+      </span>
+    );
+  });
+  if ((cargo?.length ?? 0) > 5) lines.push(G.dim(`(+${(cargo?.length ?? 0) - 5} more)`));
+  return { label: <>Cargo: {G.cargo(used, capacity)}</>, lines };
+}
+
+function fEstimate(j: Record<string, unknown>): ResultSummary {
+  const total = j.total_price ?? j.estimated_cost ?? j.cost;
+  if (total !== undefined) return { label: <>Estimated: {G.credits(total)}</>, lines: [] };
+  return fGeneric(j);
+}
+
+function fFactionInfo(j: Record<string, unknown>): ResultSummary {
+  const faction = (j.faction ?? j) as Record<string, unknown>;
+  const name = String(faction.name ?? j.name ?? '');
+  const tag = faction.tag ? ` [${String(faction.tag)}]` : '';
+  const leader = faction.leader_username ?? faction.leader;
+  const members = faction.member_count;
+  const lines: ReactNode[] = [];
+  if (leader) lines.push(<>Leader: {G.player(leader)}</>);
+  if (members !== undefined)
+    lines.push(
+      <>
+        Members: <span className="text-yellow-400">{String(members)}</span>
+      </>,
+    );
+  return {
+    label: (
+      <>
+        {G.player(name)}
+        {G.dim(tag)}
+      </>
+    ),
+    lines,
+  };
+}
+
+function fFactionList(j: Record<string, unknown>): ResultSummary {
+  const factions = j.factions as Array<Record<string, unknown>> | undefined;
+  const count = factions?.length ?? 0;
+  const lines: ReactNode[] = (factions ?? []).slice(0, 5).map((f, i) => {
+    const name = String(f.name ?? '');
+    const tag = f.tag ? ` [${String(f.tag)}]` : '';
+    return (
+      <span key={i}>
+        {G.player(name)}
+        {G.dim(tag)}
+      </span>
+    );
+  });
+  if (count > 5) lines.push(G.dim(`(+${count - 5} more)`));
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{count}</span> faction(s)
+      </>
+    ),
+    lines,
+  };
+}
+
+function fForumList(j: Record<string, unknown>): ResultSummary {
+  const threads = j.threads as Array<Record<string, unknown>> | undefined;
+  const count = threads?.length ?? 0;
+  const lines: ReactNode[] = (threads ?? []).slice(0, 3).map((t, i) => {
+    const title = String(t.title ?? '');
+    const author = t.author ? ` — ${String(t.author)}` : '';
+    return (
+      <span key={i}>
+        {title.length > 50 ? title.slice(0, 50) + '…' : title}
+        {G.dim(author)}
+      </span>
+    );
+  });
+  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{count}</span> thread(s)
+      </>
+    ),
+    lines,
+  };
+}
+
+function fForumThread(j: Record<string, unknown>): ResultSummary {
+  const replies = j.replies as Array<Record<string, unknown>> | undefined;
+  const count = replies?.length ?? 0;
+  const lines: ReactNode[] = (replies ?? []).slice(0, 3).map((r, i) => {
+    const author = String(r.author ?? '');
+    const content = String(r.content ?? '');
+    const preview = content.length > 50 ? content.slice(0, 50) + '…' : content;
+    return (
+      <span key={i}>
+        {G.player(author)}: {G.dim(preview)}
+      </span>
+    );
+  });
+  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{count}</span> reply(s)
+      </>
+    ),
+    lines,
+  };
+}
+
+function fBuyInsurance(j: Record<string, unknown>): ResultSummary {
+  const premium = j.premium;
+  const coverage = j.coverage;
+  const lines: ReactNode[] = [];
+  const riskScore = j.risk_score;
+  if (riskScore !== undefined) lines.push(<>Risk score: {G.dim(riskScore)}</>);
+  return {
+    label: (
+      <>
+        Premium: {G.credits(premium ?? '?')} | Coverage: {G.credits(coverage ?? '?')}
+      </>
+    ),
+    lines,
+  };
+}
+
+function fInsuranceQuote(j: Record<string, unknown>): ResultSummary {
+  const premium = j.premium ?? j.estimated_premium;
+  const coverage = j.coverage ?? j.estimated_coverage;
+  if (premium !== undefined || coverage !== undefined) {
+    return {
+      label: (
+        <>
+          Premium: {G.credits(premium ?? '?')} | Coverage: {G.credits(coverage ?? '?')}
+        </>
+      ),
+      lines: [],
+    };
+  }
+  return fGeneric(j);
+}
+
+function fShipyard(j: Record<string, unknown>): ResultSummary {
+  const baseName = String(j.base_name ?? j.base_id ?? '');
+  const ships = j.ships as Array<Record<string, unknown>> | undefined;
+  const count = j.count ?? ships?.length ?? 0;
+  const lines: ReactNode[] = (ships ?? []).slice(0, 5).map((s, i) => {
+    const cls = String(s.class_name ?? s.class_id ?? s.name ?? '');
+    const price = s.price;
+    return (
+      <span key={i}>
+        {G.ship(cls)}
+        {price !== undefined ? <> {G.credits(price)}</> : null}
+      </span>
+    );
+  });
+  return {
+    label: (
+      <>
+        {G.poi(baseName)} ({G.dim(`${String(count)} ships`)})
+      </>
+    ),
+    lines,
+  };
+}
+
+function fChatHistory(j: Record<string, unknown>): ResultSummary {
+  const messages = j.messages as Array<Record<string, unknown>> | undefined;
+  const total = j.total_count ?? messages?.length ?? 0;
+  const lines: ReactNode[] = (messages ?? []).slice(0, 3).map((m, i) => {
+    const from = String(m.from ?? m.username ?? m.sender ?? '');
+    const content = String(m.content ?? m.message ?? m.text ?? '');
+    const preview = content.length > 50 ? content.slice(0, 50) + '…' : content;
+    return (
+      <span key={i}>
+        {from ? <>{G.player(from)}: </> : null}
+        {G.dim(preview)}
+      </span>
+    );
+  });
+  if (Number(total) > 3) lines.push(G.dim(`(+${Number(total) - 3} more)`));
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{String(total)}</span> message(s)
+      </>
+    ),
+    lines,
+  };
+}
+
+function fCommands(j: Record<string, unknown>): ResultSummary {
+  const commands = j.commands as Array<Record<string, unknown>> | undefined;
+  const count = commands?.length ?? 0;
+  return {
+    label: (
+      <>
+        <span className="text-yellow-400">{count}</span> commands
+      </>
+    ),
+    lines: [],
+  };
+}
+
 function fGeneric(j: Record<string, unknown>): ResultSummary {
   if (typeof j.message === 'string') {
     const m = j.message;
@@ -689,157 +883,4 @@ function fGeneric(j: Record<string, unknown>): ResultSummary {
   ));
   if (Object.keys(j).length > 5) lines.push(G.dim(`(+${Object.keys(j).length - 5} more fields)`));
   return { label: '', lines };
-}
-
-// Content formatter
-function formatContent(raw: string): string {
-  try {
-    return JSON.stringify(JSON.parse(raw), null, 2);
-  } catch {
-    return raw;
-  }
-}
-
-// Main Component
-export function SpacemoltToolBlock({
-  entry,
-  result,
-}: {
-  entry: ToolCallEntry;
-  result?: ToolResultEntry;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const shortName = entry.toolName.slice('mcp__spacemolt__'.length);
-  const emoji = getToolEmoji(shortName);
-  const actionLabel = getActionLabel(shortName);
-  const actionDetail = formatActionDetail(shortName, entry.input);
-
-  const isPending = !result;
-  const isError = result?.isError ?? false;
-  const summary = result && !isError ? parseResultSummary(shortName, result.content) : null;
-
-  const badgeClass = isPending
-    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-    : isError
-      ? 'bg-red-500/10 text-red-400 border-red-500/20'
-      : 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-
-  return (
-    <div>
-      {/* Header row */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setExpanded(!expanded)}
-        onKeyDown={(e) => e.key === 'Enter' && setExpanded(!expanded)}
-        className="flex items-center gap-1.5 min-w-0 cursor-pointer select-none hover:opacity-80 transition-opacity"
-      >
-        {/* State icon */}
-        {isPending ? (
-          <span className="shrink-0 w-3 h-3 rounded-full border border-t-amber-400 border-amber-400/20 animate-spin" />
-        ) : isError ? (
-          <span className="shrink-0 text-red-500">
-            <LuX size={16} />
-          </span>
-        ) : (
-          <span className="shrink-0 text-emerald-500">
-            <LuCheck size={12} />
-          </span>
-        )}
-
-        {/* Action badge */}
-        <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded border font-bold ${badgeClass}`}>
-          {emoji} {actionLabel}
-        </span>
-
-        {/* Action detail */}
-        {actionDetail && (
-          <span className="text-xs font-mono text-zinc-400 truncate min-w-0">{actionDetail}</span>
-        )}
-
-        {/* Timestamp */}
-        <span className="text-xs text-zinc-700 font-mono ml-auto shrink-0">
-          {entry.timestamp.slice(11, 19)}
-        </span>
-      </div>
-
-      {/* Collapsed summary */}
-      {result && !expanded && (
-        <div className="ml-4 mt-0.5 text-xs font-mono">
-          {isError ? (
-            <div className="text-red-400/60 truncate">{result.content.trim().slice(0, 80)}</div>
-          ) : summary ? (
-            <>
-              <div className="text-zinc-400">{summary.label}</div>
-              {summary.lines.map((line, i) => (
-                <div key={i} className="text-zinc-500">
-                  {line}
-                </div>
-              ))}
-            </>
-          ) : null}
-        </div>
-      )}
-
-      {/* Expanded content */}
-      {expanded && (
-        <div className="ml-4 mt-1 space-y-1.5">
-          {/* Summary section (purple) */}
-          {summary && (
-            <div className="px-3 py-2 rounded-md border bg-purple-500/5 border-purple-500/10">
-              <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Summary</div>
-              <div className="text-sm font-mono space-y-0.5">
-                <div className="text-zinc-300">{summary.label}</div>
-                {summary.lines.map((line, i) => (
-                  <div key={i} className="text-zinc-500">
-                    {line}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Input */}
-          <div
-            className={`px-3 py-2 rounded-md border overflow-x-auto ${
-              isPending
-                ? 'bg-amber-500/5 border-amber-500/10'
-                : isError
-                  ? 'bg-red-500/5 border-red-500/10'
-                  : 'bg-purple-500/5 border-purple-500/10'
-            }`}
-          >
-            <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Input</div>
-            <pre
-              className={`text-sm font-mono whitespace-pre-wrap break-words ${
-                isPending ? 'text-amber-200/70' : isError ? 'text-red-200/60' : 'text-purple-200/60'
-              }`}
-            >
-              {JSON.stringify(entry.input, null, 2)}
-            </pre>
-          </div>
-
-          {/* Result */}
-          {result && (
-            <div
-              className={`px-3 py-2 rounded-md border overflow-x-auto ${
-                isError ? 'bg-red-500/5 border-red-500/10' : 'bg-purple-500/5 border-purple-500/10'
-              }`}
-            >
-              <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">
-                {isError ? 'Error' : 'Result'}
-              </div>
-              <pre
-                className={`text-sm font-mono whitespace-pre-wrap break-words ${
-                  isError ? 'text-red-200/60' : 'text-purple-200/60'
-                }`}
-              >
-                {formatContent(result.content)}
-              </pre>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
 }
