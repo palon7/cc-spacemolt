@@ -13,7 +13,7 @@ export function PanelHeaderButton({ onClick, disabled, title, children }: PanelH
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className="p-3 -m-2 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      className="p-2 -m-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
     >
       {children}
     </button>

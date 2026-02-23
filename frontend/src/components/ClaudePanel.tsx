@@ -154,7 +154,7 @@ export function ClaudePanel({
               disabled={isRunning}
               title="Session History"
             >
-              <LuClock size={12} />
+              <LuClock size={14} />
             </PanelHeaderButton>
             {sessionMeta && (
               <span className="hidden sm:inline text-xs px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-600">
