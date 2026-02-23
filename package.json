@@ -1,7 +1,6 @@
 {
   "name": "cc-spacemolt",
   "version": "1.0.0",
-  "type": "module",
   "description": "Monitor tool for Claude Code CLI playing SpaceMolt — real-time Web UI and game state dashboard",
   "keywords": [
     "claude",
@@ -11,8 +10,9 @@
     "agent",
     "game"
   ],
+  "author": "Ryota Uno <palon7@gmail.com> (https://github.com/palon7)",
   "license": "MIT",
-  "author": "Ryota Uno",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/palon7/cc-spacemolt.git"
@@ -20,7 +20,7 @@
   "bugs": {
     "url": "https://github.com/palon7/cc-spacemolt/issues"
   },
-  "homepage": "https://github.com/palon7/cc-spacemolt#readme",
+  "homepage": "https://github.com/palon7/cc-spacemolt",
   "files": [
     "bin/",
     "backend/dist/",
