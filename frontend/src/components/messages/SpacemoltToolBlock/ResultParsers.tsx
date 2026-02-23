@@ -1,6 +1,65 @@
 import type { ReactNode } from 'react';
 import { G, type ResultSummary } from './GameText';
 
+// Runtime-checked accessors — avoid `as` casts throughout parsers
+function asArr(v: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(v) ? (v as Array<Record<string, unknown>>) : [];
+}
+
+function asObj(v: unknown): Record<string, unknown> {
+  return v !== null && typeof v === 'object' && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : {};
+}
+
+function asStr(v: unknown, fallback = ''): string {
+  return typeof v === 'string' ? v : fallback;
+}
+
+// Dispatch table: shortName → parser
+const PARSERS: Record<string, (j: Record<string, unknown>) => ResultSummary> = {
+  mine: fMine,
+  travel: fTravel,
+  jump: fJump,
+  dock: fDock,
+  undock: () => ({ label: 'Undocked', lines: [] }),
+  login: fLogin,
+  get_status: fStatus,
+  sell: fSell,
+  buy: fBuy,
+  craft: fCraft,
+  refuel: fRefuel,
+  deposit_items: fDeposit,
+  withdraw_items: fWithdraw,
+  get_notifications: fNotifications,
+  chat: fChat,
+  get_ship: fShip,
+  get_poi: fPoi,
+  view_market: fMarket,
+  get_system: fSystem,
+  scan: fScan,
+  attack: fAttack,
+  forum_reply: fForumReply,
+  captains_log_add: fCaptainsLog,
+  accept_mission: fAcceptMission,
+  complete_mission: fCompleteMission,
+  get_missions: fMissions,
+  get_active_missions: fActiveMissions,
+  find_route: fRoute,
+  search_systems: fSearchSystems,
+  get_cargo: fCargo,
+  estimate_purchase: fEstimate,
+  faction_info: fFactionInfo,
+  faction_list: fFactionList,
+  forum_list: fForumList,
+  forum_get_thread: fForumThread,
+  buy_insurance: fBuyInsurance,
+  get_insurance_quote: fInsuranceQuote,
+  shipyard_showroom: fShipyard,
+  get_chat_history: fChatHistory,
+  get_commands: fCommands,
+};
+
 export function parseResultSummary(shortName: string, content: string): ResultSummary {
   let json: Record<string, unknown> | null = null;
   try {
@@ -8,98 +67,11 @@ export function parseResultSummary(shortName: string, content: string): ResultSu
   } catch {
     /* not JSON */
   }
-  if (json) return formatJsonResult(shortName, json);
+  if (json) return (PARSERS[shortName] ?? fGeneric)(json);
 
   const textLines = content.split('\n').filter((l) => l.trim());
   if (textLines.length <= 3) return { label: '', lines: textLines };
   return { label: '', lines: [...textLines.slice(0, 3), `(+${textLines.length - 3} more lines)`] };
-}
-
-function formatJsonResult(shortName: string, json: Record<string, unknown>): ResultSummary {
-  switch (shortName) {
-    case 'mine':
-      return fMine(json);
-    case 'travel':
-      return fTravel(json);
-    case 'jump':
-      return fJump(json);
-    case 'dock':
-      return fDock(json);
-    case 'undock':
-      return { label: 'Undocked', lines: [] };
-    case 'login':
-      return fLogin(json);
-    case 'get_status':
-      return fStatus(json);
-    case 'sell':
-      return fSell(json);
-    case 'buy':
-      return fBuy(json);
-    case 'craft':
-      return fCraft(json);
-    case 'refuel':
-      return fRefuel(json);
-    case 'deposit_items':
-      return fDeposit(json);
-    case 'withdraw_items':
-      return fWithdraw(json);
-    case 'get_notifications':
-      return fNotifications(json);
-    case 'chat':
-      return fChat(json);
-    case 'get_ship':
-      return fShip(json);
-    case 'get_poi':
-      return fPoi(json);
-    case 'view_market':
-      return fMarket(json);
-    case 'get_system':
-      return fSystem(json);
-    case 'scan':
-      return fScan(json);
-    case 'attack':
-      return fAttack(json);
-    case 'forum_reply':
-      return fForumReply(json);
-    case 'captains_log_add':
-      return fCaptainsLog(json);
-    case 'accept_mission':
-      return fAcceptMission(json);
-    case 'complete_mission':
-      return fCompleteMission(json);
-    case 'get_missions':
-      return fMissions(json);
-    case 'get_active_missions':
-      return fActiveMissions(json);
-    case 'find_route':
-      return fRoute(json);
-    case 'search_systems':
-      return fSearchSystems(json);
-    case 'get_cargo':
-      return fCargo(json);
-    case 'estimate_purchase':
-      return fEstimate(json);
-    case 'faction_info':
-      return fFactionInfo(json);
-    case 'faction_list':
-      return fFactionList(json);
-    case 'forum_list':
-      return fForumList(json);
-    case 'forum_get_thread':
-      return fForumThread(json);
-    case 'buy_insurance':
-      return fBuyInsurance(json);
-    case 'get_insurance_quote':
-      return fInsuranceQuote(json);
-    case 'shipyard_showroom':
-      return fShipyard(json);
-    case 'get_chat_history':
-      return fChatHistory(json);
-    case 'get_commands':
-      return fCommands(json);
-    default:
-      return fGeneric(json);
-  }
 }
 
 function fMine(j: Record<string, unknown>): ResultSummary {
@@ -119,9 +91,9 @@ function fMine(j: Record<string, unknown>): ResultSummary {
 
 function fTravel(j: Record<string, unknown>): ResultSummary {
   const poi = j.poi_name ?? j.poi_id ?? j.target_poi ?? '';
+  const players = asArr(j.online_players);
   const lines: ReactNode[] = [];
-  const players = j.online_players as Array<Record<string, unknown>> | undefined;
-  if (players && players.length > 0) {
+  if (players.length > 0) {
     lines.push(
       <>
         Online:{' '}
@@ -203,9 +175,9 @@ function fDock(j: Record<string, unknown>): ResultSummary {
 function fLogin(j: Record<string, unknown>): ResultSummary {
   const username = j.username ?? '';
   const lines: ReactNode[] = [];
-  const log = j.captains_log as Array<Record<string, unknown>> | undefined;
-  if (log && log.length > 0) {
-    const firstLine = String(log[0].entry ?? '').split('\n')[0];
+  const log = asArr(j.captains_log);
+  if (log.length > 0) {
+    const firstLine = asStr(log[0].entry).split('\n')[0];
     const t = firstLine.length > 60 ? firstLine.slice(0, 60) + '…' : firstLine;
     lines.push(
       <>
@@ -213,33 +185,31 @@ function fLogin(j: Record<string, unknown>): ResultSummary {
       </>,
     );
   }
-  const unread = j.unread_chat as Record<string, number> | undefined;
-  if (unread) {
-    const entries = Object.entries(unread).filter(([, count]) => count > 0);
-    if (entries.length > 0) {
-      lines.push(
-        <>
-          Unread:{' '}
-          {entries.map(([ch, count], i) => (
-            <span key={ch}>
-              {i > 0 ? ', ' : ''}
-              {G.channel(ch)}: <span className="text-yellow-400">{count}</span>
-            </span>
-          ))}
-        </>,
-      );
-    }
+  const unread = asObj(j.unread_chat) as Record<string, number>;
+  const unreadEntries = Object.entries(unread).filter(([, count]) => count > 0);
+  if (unreadEntries.length > 0) {
+    lines.push(
+      <>
+        Unread:{' '}
+        {unreadEntries.map(([ch, count], i) => (
+          <span key={ch}>
+            {i > 0 ? ', ' : ''}
+            {G.channel(ch)}: <span className="text-yellow-400">{count}</span>
+          </span>
+        ))}
+      </>,
+    );
   }
   return { label: <>Login OK: {G.player(username)}</>, lines };
 }
 
 function fStatus(j: Record<string, unknown>): ResultSummary {
-  const player = j.player as Record<string, unknown> | undefined;
-  const ship = j.ship as Record<string, unknown> | undefined;
-  const name = player?.username ?? j.username ?? '';
-  const credits = player?.credits ?? j.credits ?? '';
+  const player = asObj(j.player);
+  const ship = asObj(j.ship);
+  const name = player.username ?? j.username ?? '';
+  const credits = player.credits ?? j.credits ?? '';
   const lines: ReactNode[] = [];
-  if (ship) {
+  if (j.ship !== undefined) {
     lines.push(
       <>
         Ship: {G.ship(ship.class ?? ship.name ?? '?')} | Fuel:{' '}
@@ -353,8 +323,8 @@ function fWithdraw(j: Record<string, unknown>): ResultSummary {
 function fNotifications(j: Record<string, unknown>): ResultSummary {
   const count = Number(j.count ?? 0);
   if (count === 0) return { label: G.dim('No notifications'), lines: [] };
-  const notifications = j.notifications as Array<Record<string, unknown>> | undefined;
-  if (!notifications) {
+  const notifications = asArr(j.notifications);
+  if (notifications.length === 0) {
     return {
       label: (
         <>
@@ -365,8 +335,8 @@ function fNotifications(j: Record<string, unknown>): ResultSummary {
     };
   }
   const lines: ReactNode[] = notifications.slice(0, 5).map((n, i) => {
-    const type = String(n.type ?? '');
-    const msg = String(n.message ?? n.content ?? JSON.stringify(n));
+    const type = asStr(n.type);
+    const msg = asStr(n.message ?? n.content, JSON.stringify(n));
     const t = msg.length > 60 ? msg.slice(0, 60) + '…' : msg;
     return (
       <span key={i}>
@@ -387,7 +357,7 @@ function fNotifications(j: Record<string, unknown>): ResultSummary {
 
 function fChat(j: Record<string, unknown>): ResultSummary {
   const channel = j.channel ?? '';
-  const content = String(j.content ?? j.message ?? '');
+  const content = asStr(j.content ?? j.message);
   return {
     label: (
       <>
@@ -399,10 +369,9 @@ function fChat(j: Record<string, unknown>): ResultSummary {
 }
 
 function fShip(j: Record<string, unknown>): ResultSummary {
-  const shipData = (j.ship ?? j) as Record<string, unknown>;
-  const classData = j.class as Record<string, unknown> | undefined;
-  const cls =
-    classData?.name ?? classData?.class ?? shipData.class_id ?? shipData.ship_class ?? '?';
+  const shipData = asObj(j.ship ?? j);
+  const classData = asObj(j.class);
+  const cls = classData.name ?? classData.class ?? shipData.class_id ?? shipData.ship_class ?? '?';
   const fuel = shipData.fuel ?? '?';
   const maxFuel = shipData.max_fuel ?? '?';
   const cargo = shipData.cargo_used ?? j.cargo_used ?? '?';
@@ -418,24 +387,21 @@ function fShip(j: Record<string, unknown>): ResultSummary {
 }
 
 function fPoi(j: Record<string, unknown>): ResultSummary {
-  const poi = j.poi as Record<string, unknown> | undefined;
-  const name = poi?.name ?? '';
-  const poiType = poi?.type ?? '';
-  const lines: ReactNode[] = [];
-  const resources = j.resources as Array<Record<string, unknown>> | undefined;
-  if (resources && resources.length > 0) {
-    for (const r of resources) {
-      const rName = r.name ?? r.resource_id ?? '';
-      const richness = r.richness ?? '';
-      const remaining = r.remaining_display ?? '';
-      lines.push(
-        <>
-          {G.item(rName)} richness:<span className="text-yellow-400">{String(richness)}</span>
-          {remaining ? <> ({G.dim(remaining)})</> : null}
-        </>,
-      );
-    }
-  }
+  const poi = asObj(j.poi);
+  const name = poi.name ?? '';
+  const poiType = poi.type ?? '';
+  const resources = asArr(j.resources);
+  const lines: ReactNode[] = resources.map((r, i) => {
+    const rName = r.name ?? r.resource_id ?? '';
+    const richness = r.richness ?? '';
+    const remaining = r.remaining_display ?? '';
+    return (
+      <span key={i}>
+        {G.item(rName)} richness:<span className="text-yellow-400">{String(richness)}</span>
+        {remaining ? <> ({G.dim(remaining)})</> : null}
+      </span>
+    );
+  });
   return {
     label: (
       <>
@@ -449,38 +415,34 @@ function fPoi(j: Record<string, unknown>): ResultSummary {
 
 function fMarket(j: Record<string, unknown>): ResultSummary {
   const base = j.base ?? '';
-  const items = j.items as Array<Record<string, unknown>> | undefined;
-  const count = items?.length ?? 0;
-  const lines: ReactNode[] = [];
-  if (items) {
-    for (const item of items.slice(0, 8)) {
-      const name = item.item_name ?? item.item_id ?? '';
-      const bestBuy = item.best_buy as number | undefined;
-      const bestSell = item.best_sell as number | undefined;
-      lines.push(
-        <>
-          {G.item(name)}
-          {bestSell && bestSell > 0 ? (
-            <>
-              {' '}
-              sell:<span className="text-green-400">{bestSell}cr</span>
-            </>
-          ) : null}
-          {bestBuy && bestBuy > 0 ? (
-            <>
-              {' '}
-              buy:<span className="text-green-300">{bestBuy}cr</span>
-            </>
-          ) : null}
-        </>,
-      );
-    }
-    if (items.length > 8) lines.push(G.dim(`(+${items.length - 8} more)`));
-  }
+  const items = asArr(j.items);
+  const lines: ReactNode[] = items.slice(0, 8).map((item, i) => {
+    const name = item.item_name ?? item.item_id ?? '';
+    const bestBuy = typeof item.best_buy === 'number' ? item.best_buy : undefined;
+    const bestSell = typeof item.best_sell === 'number' ? item.best_sell : undefined;
+    return (
+      <span key={i}>
+        {G.item(name)}
+        {bestSell && bestSell > 0 ? (
+          <>
+            {' '}
+            sell:<span className="text-green-400">{bestSell}cr</span>
+          </>
+        ) : null}
+        {bestBuy && bestBuy > 0 ? (
+          <>
+            {' '}
+            buy:<span className="text-green-300">{bestBuy}cr</span>
+          </>
+        ) : null}
+      </span>
+    );
+  });
+  if (items.length > 8) lines.push(G.dim(`(+${items.length - 8} more)`));
   return {
     label: (
       <>
-        {G.poi(base)} ({G.dim(`${count} items`)})
+        {G.poi(base)} ({G.dim(`${items.length} items`)})
       </>
     ),
     lines,
@@ -488,7 +450,7 @@ function fMarket(j: Record<string, unknown>): ResultSummary {
 }
 
 function fSystem(j: Record<string, unknown>): ResultSummary {
-  const sys = (j.system ?? j) as Record<string, unknown>;
+  const sys = asObj(j.system ?? j);
   const name = sys.name ?? sys.system_name ?? '';
   const emp = sys.empire ?? '';
   const security = sys.security_status ?? sys.police_level ?? '';
@@ -526,7 +488,7 @@ function fAttack(j: Record<string, unknown>): ResultSummary {
 }
 
 function fForumReply(j: Record<string, unknown>): ResultSummary {
-  const msg = typeof j.message === 'string' ? j.message : 'Reply posted';
+  const msg = asStr(j.message, 'Reply posted');
   return { label: msg.length > 80 ? msg.slice(0, 80) + '…' : msg, lines: [] };
 }
 
@@ -536,8 +498,8 @@ function fCaptainsLog(j: Record<string, unknown>): ResultSummary {
 }
 
 function fAcceptMission(j: Record<string, unknown>): ResultSummary {
-  const title = String(j.title ?? j.mission_id ?? 'Mission');
-  const type = String(j.type ?? '');
+  const title = asStr(j.title ?? j.mission_id, 'Mission');
+  const type = asStr(j.type);
   return {
     label: (
       <>
@@ -550,15 +512,14 @@ function fAcceptMission(j: Record<string, unknown>): ResultSummary {
 }
 
 function fCompleteMission(j: Record<string, unknown>): ResultSummary {
-  const msg = typeof j.message === 'string' ? j.message : 'Mission completed';
+  const msg = asStr(j.message, 'Mission completed');
   return { label: msg.length > 80 ? msg.slice(0, 80) + '…' : msg, lines: [] };
 }
 
 function fMissions(j: Record<string, unknown>): ResultSummary {
-  const missions = j.missions as Array<Record<string, unknown>> | undefined;
-  const count = missions?.length ?? 0;
-  const lines: ReactNode[] = (missions ?? []).slice(0, 3).map((m, i) => {
-    const title = String(m.title ?? m.mission_id ?? '');
+  const missions = asArr(j.missions);
+  const lines: ReactNode[] = missions.slice(0, 3).map((m, i) => {
+    const title = asStr(m.title ?? m.mission_id);
     const diff = m.difficulty !== undefined ? ` [diff:${String(m.difficulty)}]` : '';
     return (
       <span key={i}>
@@ -567,11 +528,11 @@ function fMissions(j: Record<string, unknown>): ResultSummary {
       </span>
     );
   });
-  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  if (missions.length > 3) lines.push(G.dim(`(+${missions.length - 3} more)`));
   return {
     label: (
       <>
-        <span className="text-yellow-400">{count}</span> mission(s)
+        <span className="text-yellow-400">{missions.length}</span> mission(s)
       </>
     ),
     lines,
@@ -579,11 +540,10 @@ function fMissions(j: Record<string, unknown>): ResultSummary {
 }
 
 function fActiveMissions(j: Record<string, unknown>): ResultSummary {
-  const missions = j.missions as Array<Record<string, unknown>> | undefined;
-  const count = missions?.length ?? 0;
-  const lines: ReactNode[] = (missions ?? []).slice(0, 3).map((m, i) => {
-    const title = String(m.title ?? m.mission_id ?? '');
-    const progress = (m.progress as Record<string, unknown> | undefined)?.percent_complete;
+  const missions = asArr(j.missions);
+  const lines: ReactNode[] = missions.slice(0, 3).map((m, i) => {
+    const title = asStr(m.title ?? m.mission_id);
+    const progress = asObj(m.progress).percent_complete;
     const pct = progress !== undefined ? ` ${String(progress)}%` : '';
     return (
       <span key={i}>
@@ -592,11 +552,11 @@ function fActiveMissions(j: Record<string, unknown>): ResultSummary {
       </span>
     );
   });
-  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  if (missions.length > 3) lines.push(G.dim(`(+${missions.length - 3} more)`));
   return {
     label: (
       <>
-        <span className="text-yellow-400">{count}</span> active mission(s)
+        <span className="text-yellow-400">{missions.length}</span> active mission(s)
       </>
     ),
     lines,
@@ -604,22 +564,20 @@ function fActiveMissions(j: Record<string, unknown>): ResultSummary {
 }
 
 function fRoute(j: Record<string, unknown>): ResultSummary {
-  const found = j.found as boolean | undefined;
-  if (!found) return { label: G.dim('No route found'), lines: [] };
-  const route = j.route as Array<Record<string, unknown>> | undefined;
-  const hops = route?.length ?? 0;
-  const dest = route && route.length > 0 ? String(route[route.length - 1].name ?? '') : '';
-  const lines: ReactNode[] = (route ?? []).slice(0, 5).map((s, i) => (
+  if (!j.found) return { label: G.dim('No route found'), lines: [] };
+  const route = asArr(j.route);
+  const dest = route.length > 0 ? asStr(route[route.length - 1].name) : '';
+  const lines: ReactNode[] = route.slice(0, 5).map((s, i) => (
     <span key={i}>
       {i > 0 ? '→ ' : ''}
       {G.system(s.name ?? s.system_id ?? '')}
     </span>
   ));
-  if (hops > 5) lines.push(G.dim(`(+${hops - 5} more)`));
+  if (route.length > 5) lines.push(G.dim(`(+${route.length - 5} more)`));
   return {
     label: (
       <>
-        Route to {G.system(dest)} ({G.dim(`${hops} hops`)})
+        Route to {G.system(dest)} ({G.dim(`${route.length} hops`)})
       </>
     ),
     lines,
@@ -627,10 +585,10 @@ function fRoute(j: Record<string, unknown>): ResultSummary {
 }
 
 function fSearchSystems(j: Record<string, unknown>): ResultSummary {
-  const systems = j.systems as Array<Record<string, unknown>> | undefined;
-  const total = j.total_found ?? systems?.length ?? 0;
-  const lines: ReactNode[] = (systems ?? []).slice(0, 5).map((s, i) => {
-    const name = String(s.name ?? s.system_id ?? '');
+  const systems = asArr(j.systems);
+  const total = j.total_found ?? systems.length;
+  const lines: ReactNode[] = systems.slice(0, 5).map((s, i) => {
+    const name = asStr(s.name ?? s.system_id);
     const emp = s.empire ? ` (${String(s.empire)})` : '';
     return (
       <span key={i}>
@@ -652,9 +610,9 @@ function fSearchSystems(j: Record<string, unknown>): ResultSummary {
 function fCargo(j: Record<string, unknown>): ResultSummary {
   const used = j.used ?? '?';
   const capacity = j.capacity ?? '?';
-  const cargo = j.cargo as Array<Record<string, unknown>> | undefined;
-  const lines: ReactNode[] = (cargo ?? []).slice(0, 5).map((c, i) => {
-    const name = String(c.name ?? c.item_id ?? '');
+  const cargo = asArr(j.cargo);
+  const lines: ReactNode[] = cargo.slice(0, 5).map((c, i) => {
+    const name = asStr(c.name ?? c.item_id);
     const qty = c.quantity;
     return (
       <span key={i}>
@@ -663,7 +621,7 @@ function fCargo(j: Record<string, unknown>): ResultSummary {
       </span>
     );
   });
-  if ((cargo?.length ?? 0) > 5) lines.push(G.dim(`(+${(cargo?.length ?? 0) - 5} more)`));
+  if (cargo.length > 5) lines.push(G.dim(`(+${cargo.length - 5} more)`));
   return { label: <>Cargo: {G.cargo(used, capacity)}</>, lines };
 }
 
@@ -674,8 +632,8 @@ function fEstimate(j: Record<string, unknown>): ResultSummary {
 }
 
 function fFactionInfo(j: Record<string, unknown>): ResultSummary {
-  const faction = (j.faction ?? j) as Record<string, unknown>;
-  const name = String(faction.name ?? j.name ?? '');
+  const faction = asObj(j.faction ?? j);
+  const name = asStr(faction.name ?? j.name);
   const tag = faction.tag ? ` [${String(faction.tag)}]` : '';
   const leader = faction.leader_username ?? faction.leader;
   const members = faction.member_count;
@@ -699,10 +657,9 @@ function fFactionInfo(j: Record<string, unknown>): ResultSummary {
 }
 
 function fFactionList(j: Record<string, unknown>): ResultSummary {
-  const factions = j.factions as Array<Record<string, unknown>> | undefined;
-  const count = factions?.length ?? 0;
-  const lines: ReactNode[] = (factions ?? []).slice(0, 5).map((f, i) => {
-    const name = String(f.name ?? '');
+  const factions = asArr(j.factions);
+  const lines: ReactNode[] = factions.slice(0, 5).map((f, i) => {
+    const name = asStr(f.name);
     const tag = f.tag ? ` [${String(f.tag)}]` : '';
     return (
       <span key={i}>
@@ -711,11 +668,11 @@ function fFactionList(j: Record<string, unknown>): ResultSummary {
       </span>
     );
   });
-  if (count > 5) lines.push(G.dim(`(+${count - 5} more)`));
+  if (factions.length > 5) lines.push(G.dim(`(+${factions.length - 5} more)`));
   return {
     label: (
       <>
-        <span className="text-yellow-400">{count}</span> faction(s)
+        <span className="text-yellow-400">{factions.length}</span> faction(s)
       </>
     ),
     lines,
@@ -723,10 +680,9 @@ function fFactionList(j: Record<string, unknown>): ResultSummary {
 }
 
 function fForumList(j: Record<string, unknown>): ResultSummary {
-  const threads = j.threads as Array<Record<string, unknown>> | undefined;
-  const count = threads?.length ?? 0;
-  const lines: ReactNode[] = (threads ?? []).slice(0, 3).map((t, i) => {
-    const title = String(t.title ?? '');
+  const threads = asArr(j.threads);
+  const lines: ReactNode[] = threads.slice(0, 3).map((t, i) => {
+    const title = asStr(t.title);
     const author = t.author ? ` — ${String(t.author)}` : '';
     return (
       <span key={i}>
@@ -735,11 +691,11 @@ function fForumList(j: Record<string, unknown>): ResultSummary {
       </span>
     );
   });
-  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  if (threads.length > 3) lines.push(G.dim(`(+${threads.length - 3} more)`));
   return {
     label: (
       <>
-        <span className="text-yellow-400">{count}</span> thread(s)
+        <span className="text-yellow-400">{threads.length}</span> thread(s)
       </>
     ),
     lines,
@@ -747,11 +703,10 @@ function fForumList(j: Record<string, unknown>): ResultSummary {
 }
 
 function fForumThread(j: Record<string, unknown>): ResultSummary {
-  const replies = j.replies as Array<Record<string, unknown>> | undefined;
-  const count = replies?.length ?? 0;
-  const lines: ReactNode[] = (replies ?? []).slice(0, 3).map((r, i) => {
-    const author = String(r.author ?? '');
-    const content = String(r.content ?? '');
+  const replies = asArr(j.replies);
+  const lines: ReactNode[] = replies.slice(0, 3).map((r, i) => {
+    const author = asStr(r.author);
+    const content = asStr(r.content);
     const preview = content.length > 50 ? content.slice(0, 50) + '…' : content;
     return (
       <span key={i}>
@@ -759,11 +714,11 @@ function fForumThread(j: Record<string, unknown>): ResultSummary {
       </span>
     );
   });
-  if (count > 3) lines.push(G.dim(`(+${count - 3} more)`));
+  if (replies.length > 3) lines.push(G.dim(`(+${replies.length - 3} more)`));
   return {
     label: (
       <>
-        <span className="text-yellow-400">{count}</span> reply(s)
+        <span className="text-yellow-400">{replies.length}</span> reply(s)
       </>
     ),
     lines,
@@ -771,15 +726,12 @@ function fForumThread(j: Record<string, unknown>): ResultSummary {
 }
 
 function fBuyInsurance(j: Record<string, unknown>): ResultSummary {
-  const premium = j.premium;
-  const coverage = j.coverage;
   const lines: ReactNode[] = [];
-  const riskScore = j.risk_score;
-  if (riskScore !== undefined) lines.push(<>Risk score: {G.dim(riskScore)}</>);
+  if (j.risk_score !== undefined) lines.push(<>Risk score: {G.dim(j.risk_score)}</>);
   return {
     label: (
       <>
-        Premium: {G.credits(premium ?? '?')} | Coverage: {G.credits(coverage ?? '?')}
+        Premium: {G.credits(j.premium ?? '?')} | Coverage: {G.credits(j.coverage ?? '?')}
       </>
     ),
     lines,
@@ -803,16 +755,15 @@ function fInsuranceQuote(j: Record<string, unknown>): ResultSummary {
 }
 
 function fShipyard(j: Record<string, unknown>): ResultSummary {
-  const baseName = String(j.base_name ?? j.base_id ?? '');
-  const ships = j.ships as Array<Record<string, unknown>> | undefined;
-  const count = j.count ?? ships?.length ?? 0;
-  const lines: ReactNode[] = (ships ?? []).slice(0, 5).map((s, i) => {
-    const cls = String(s.class_name ?? s.class_id ?? s.name ?? '');
-    const price = s.price;
+  const baseName = asStr(j.base_name ?? j.base_id);
+  const ships = asArr(j.ships);
+  const count = j.count ?? ships.length;
+  const lines: ReactNode[] = ships.slice(0, 5).map((s, i) => {
+    const cls = asStr(s.class_name ?? s.class_id ?? s.name);
     return (
       <span key={i}>
         {G.ship(cls)}
-        {price !== undefined ? <> {G.credits(price)}</> : null}
+        {s.price !== undefined ? <> {G.credits(s.price)}</> : null}
       </span>
     );
   });
@@ -827,11 +778,11 @@ function fShipyard(j: Record<string, unknown>): ResultSummary {
 }
 
 function fChatHistory(j: Record<string, unknown>): ResultSummary {
-  const messages = j.messages as Array<Record<string, unknown>> | undefined;
-  const total = j.total_count ?? messages?.length ?? 0;
-  const lines: ReactNode[] = (messages ?? []).slice(0, 3).map((m, i) => {
-    const from = String(m.from ?? m.username ?? m.sender ?? '');
-    const content = String(m.content ?? m.message ?? m.text ?? '');
+  const messages = asArr(j.messages);
+  const total = j.total_count ?? messages.length;
+  const lines: ReactNode[] = messages.slice(0, 3).map((m, i) => {
+    const from = asStr(m.from ?? m.username ?? m.sender);
+    const content = asStr(m.content ?? m.message ?? m.text);
     const preview = content.length > 50 ? content.slice(0, 50) + '…' : content;
     return (
       <span key={i}>
@@ -852,8 +803,7 @@ function fChatHistory(j: Record<string, unknown>): ResultSummary {
 }
 
 function fCommands(j: Record<string, unknown>): ResultSummary {
-  const commands = j.commands as Array<Record<string, unknown>> | undefined;
-  const count = commands?.length ?? 0;
+  const count = asArr(j.commands).length;
   return {
     label: (
       <>
