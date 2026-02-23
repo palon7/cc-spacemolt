@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
+  "files": ["dist", "README.md"],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "tsx src/index.ts -- --debug --config-file ../data/config.json --log-dir ../data/logs --workspace ../data/workspace",
     "dev:watch": "tsx watch src/index.ts -- --debug --config-file ../data/config.json --log-dir ../data/logs --workspace ../data/workspace",

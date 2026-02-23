@@ -96,15 +96,12 @@ export function mergeStateUpdate(prev: GameState | null, update: StateUpdatePayl
         }))
       : base.modules,
     in_combat: update.in_combat ?? base.in_combat,
-    travel_progress:
-      update.travel_progress !== undefined ? update.travel_progress : base.travel_progress,
-    travel_destination:
-      update.travel_destination !== undefined ? update.travel_destination : base.travel_destination,
-    travel_type: update.travel_type !== undefined ? update.travel_type : base.travel_type,
-    travel_arrival_tick:
-      update.travel_arrival_tick !== undefined
-        ? update.travel_arrival_tick
-        : base.travel_arrival_tick,
+    // Travel fields: server omits these when not traveling, so treat
+    // missing (undefined) as null to clear stale travel state.
+    travel_progress: update.travel_progress ?? null,
+    travel_destination: update.travel_destination ?? null,
+    travel_type: update.travel_type ?? null,
+    travel_arrival_tick: update.travel_arrival_tick ?? null,
   };
 }
 
@@ -143,6 +140,12 @@ function getDisplayLabel(type: string, payload: unknown): string | undefined {
   return undefined;
 }
 
+function formatUsername(content: { username?: string; clan_tag?: string }): string {
+  const name = content.username ?? '?';
+  const clan = content.clan_tag ? ` [${content.clan_tag}]` : '';
+  return name + clan;
+}
+
 export function transformEventMessage(type: string, payload: unknown): GameEvent {
   const summary = summarize(type, payload);
   const label = getDisplayLabel(type, payload);
@@ -178,7 +181,8 @@ function summarize(type: string, payload: unknown): string {
     case 'pirate_combat': {
       const p = asPayload<PirateCombatPayload>(payload);
       const bossTag = p.is_boss ? ' [BOSS]' : '';
-      return `${p.pirate_name ?? '?'}${bossTag} dealt ${p.damage ?? '?'} ${p.damage_type ?? ''} damage. Hull: ${p.your_hull ?? '?'}/${p.your_max_hull ?? '?'} Shield: ${p.your_shield ?? '?'}`;
+      const damageType = p.damage_type ? ` ${p.damage_type}` : ' unknown';
+      return `${p.pirate_name ?? '?'}${bossTag} dealt ${p.damage ?? '?'}${damageType} damage. Hull: ${p.your_hull ?? '?'}/${p.your_max_hull ?? '?'} Shield: ${p.your_shield ?? '?'}`;
     }
     case 'action_result': {
       const p = asPayload<ActionResultPayload>(payload);
@@ -194,11 +198,11 @@ function summarize(type: string, payload: unknown): string {
     }
     case 'poi_arrival': {
       const p = asPayload<PoiMovementPayload>(payload);
-      return `${p.username ?? '?'}(clan=${p.clan_tag || 'No clan'}) arrived at ${p.poi_name ?? '?'}`;
+      return `${formatUsername(p)} arrived at ${p.poi_name ?? '?'}`;
     }
     case 'poi_departure': {
       const p = asPayload<PoiMovementPayload>(payload);
-      return `${p.username ?? '?'}(clan=${p.clan_tag || 'No clan'}) departed from ${p.poi_name ?? '?'}`;
+      return `${formatUsername(p)} departed from ${p.poi_name ?? '?'}`;
     }
     case 'scan_detected': {
       const p = asPayload<ScanDetectedPayload>(payload);

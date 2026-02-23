@@ -158,7 +158,6 @@ export class SessionManager {
     try {
       await this.provider.start(providerCallbacks, initialPrompt);
       if (this.isResuming) {
-        this.emitInterruptedEntry();
         this.setStatus('interrupted');
       } else {
         this.setStatus('done');
@@ -167,7 +166,6 @@ export class SessionManager {
       debug('session-manager', `provider.start() rejected: ${err}`);
       consola.error('Session error:', err);
       if (this.isResuming) {
-        this.emitInterruptedEntry();
         this.setStatus('interrupted');
       } else {
         this.setStatus('done');
@@ -175,31 +173,7 @@ export class SessionManager {
     }
   }
 
-  private emitInterruptedEntry(): void {
-    // Finalize any streaming entries (set isStreaming to false so UI stops showing spinner)
-    for (let i = 0; i < this.entries.length; i++) {
-      const e = this.entries[i]!;
-      if ((e.kind === 'text' || e.kind === 'thinking') && e.isStreaming) {
-        const finalized = { ...e, isStreaming: false };
-        this.entries[i] = finalized;
-        this.callbacks?.onEntry(finalized);
-      }
-    }
-
-    const entry: ParsedEntry = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      kind: 'text',
-      text: '[Session interrupted]',
-      isStreaming: false,
-    };
-    this.addEntry(entry);
-    this.callbacks?.onEntry(entry);
-  }
-
-  // ---------------------------------------------------------------------------
   // Private handlers
-  // ---------------------------------------------------------------------------
 
   private handleEntry(entry: ParsedEntry): void {
     // Handle streaming deltas: append text to existing entries
@@ -219,9 +193,6 @@ export class SessionManager {
       this.callbacks?.onEntry(entry);
       return;
     }
-
-    // Log parsed entries (non-streaming)
-    this.logger.logParsed(entry);
 
     if (entry.kind === 'system') {
       debug('session-manager', `Received system entry, sessionId=${entry.sessionId}`);
