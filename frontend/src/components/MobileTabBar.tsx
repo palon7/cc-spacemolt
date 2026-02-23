@@ -18,7 +18,7 @@ export function MobileTabBar({ active, onChange }: MobileTabBarProps) {
         <button
           key={t.key}
           onClick={() => onChange(t.key)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] uppercase tracking-widest transition-colors border-b-2 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm uppercase tracking-widest transition-colors border-b-2 ${
             active === t.key
               ? 'text-zinc-200 border-zinc-400'
               : 'text-zinc-600 border-transparent hover:text-zinc-400'

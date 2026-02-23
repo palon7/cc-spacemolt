@@ -1,7 +1,9 @@
 import type { GameState, TravelHistoryEntry } from '@cc-spacemolt/shared';
 import { GaugeBar } from './common/GaugeBar';
 import { Chip } from './common/Chip';
-import { IconInfo } from './common/Icons';
+import { LuInfo } from 'react-icons/lu';
+import { PanelHeader } from './common/PanelHeader';
+import { PanelHeaderButton } from './common/PanelHeaderButton';
 import { StarMap } from './StarMap';
 import { useMapData, resolveSystem } from '../hooks/useMapData';
 
@@ -30,37 +32,31 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 shrink-0">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-1.5 h-1.5 rounded-full bg-emerald-400"
-            style={{ boxShadow: '0 0 6px rgba(52,211,153,0.4)' }}
-          />
-          <h2 className="text-xs font-semibold text-zinc-300 tracking-widest uppercase">Ship</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {in_combat && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse font-bold tracking-wider">
-              COMBAT
-            </span>
-          )}
-          <button
-            onClick={onOpenDetail}
-            className="text-zinc-500 hover:text-zinc-200 p-1 rounded hover:bg-zinc-800 transition-colors"
-            title="Ship Details"
-          >
-            <IconInfo />
-          </button>
-        </div>
-      </div>
+      <PanelHeader
+        title="Ship"
+        dotClass="bg-emerald-400"
+        dotStyle={{ boxShadow: '0 0 6px rgba(52,211,153,0.4)' }}
+        right={
+          <>
+            {in_combat && (
+              <span className="text-2xs px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse font-bold tracking-wider">
+                COMBAT
+              </span>
+            )}
+            <PanelHeaderButton onClick={onOpenDetail} title="Ship Details">
+              <LuInfo size={14} />
+            </PanelHeaderButton>
+          </>
+        }
+      />
       <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar min-h-0">
         <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-zinc-800/40 border border-zinc-800">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
             {player.username[0]}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm text-zinc-200 truncate">{player.username}</div>
-            <div className="flex items-center gap-1 text-[10px] truncate">
+            <div className="text-base text-zinc-200 truncate">{player.username}</div>
+            <div className="flex items-center gap-1 text-xs truncate">
               <div
                 className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"
                 style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }}
@@ -74,20 +70,18 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="font-mono text-sm text-amber-300">
+            <div className="font-mono text-base text-amber-300">
               {player.credits.toLocaleString()}
             </div>
-            <div className="text-[9px] text-zinc-600">credits</div>
+            <div className="text-2xs text-zinc-600">credits</div>
           </div>
         </div>
         <div className="flex items-baseline justify-between px-1">
           <div>
-            <span className="text-sm font-medium text-zinc-100">{ship.name}</span>
-            <span className="ml-1.5 text-[10px] text-zinc-600">
-              {ship.class_id.replace(/_/g, ' ')}
-            </span>
+            <span className="text-base font-medium text-zinc-100">{ship.name}</span>
+            <span className="ml-1.5 text-xs text-zinc-600">{ship.class_id.replace(/_/g, ' ')}</span>
           </div>
-          <span className="text-[10px] text-zinc-700 font-mono">T{tick}</span>
+          <span className="text-xs text-zinc-700 font-mono">T{tick}</span>
         </div>
         <div className="space-y-2">
           <GaugeBar label="Hull" value={ship.hull} max={ship.max_hull} />
@@ -106,15 +100,13 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="text-[9px] uppercase tracking-widest text-cyan-500">
-                  Traveling
-                </span>
+                <span className="text-2xs uppercase tracking-widest text-cyan-500">Traveling</span>
               </div>
-              <span className="text-[9px] text-zinc-600 uppercase">{travel_type}</span>
+              <span className="text-2xs text-zinc-600 uppercase">{travel_type}</span>
             </div>
             <div className="flex items-baseline gap-2 mb-1.5">
               <span className="text-base font-mono text-cyan-300">{travel_destination}</span>
-              <span className="text-[10px] text-zinc-600">
+              <span className="text-xs text-zinc-600">
                 ETA {ticksLeft != null ? `${ticksLeft}t` : '?'}
               </span>
             </div>
@@ -125,23 +117,23 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
               />
             </div>
             <div className="text-right mt-0.5">
-              <span className="font-mono text-[10px] text-cyan-400">{travelPct}%</span>
+              <span className="font-mono text-xs text-cyan-400">{travelPct}%</span>
             </div>
           </div>
         )}
         <div>
-          <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Cargo</div>
+          <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Cargo</div>
           {ship.cargo?.map((c) => (
             <div
               key={c.item_id}
               className="flex items-center justify-between py-1 px-2 rounded bg-zinc-800/30 border border-zinc-800/50 mb-1"
             >
-              <span className="text-[11px] text-zinc-400">{c.item_id.replace(/_/g, ' ')}</span>
-              <span className="font-mono text-[11px] text-amber-300">&times;{c.quantity}</span>
+              <span className="text-sm text-zinc-400">{c.item_id.replace(/_/g, ' ')}</span>
+              <span className="font-mono text-sm text-amber-300">&times;{c.quantity}</span>
             </div>
           ))}
           {(!ship.cargo || !ship.cargo.length) && (
-            <div className="text-[11px] text-zinc-700 italic">Empty</div>
+            <div className="text-sm text-zinc-700 italic">Empty</div>
           )}
         </div>
       </div>

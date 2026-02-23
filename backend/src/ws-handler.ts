@@ -135,7 +135,6 @@ export function setupWebSocket({
           break;
         case 'send_message':
           if (sessionManager.status === 'interrupted' || sessionManager.status === 'done') {
-            sessionManager.addUserMessage(msg.text);
             sessionManager.resume(msg.text).catch((err) => {
               debug('ws', `Session resume error: ${err}`);
             });

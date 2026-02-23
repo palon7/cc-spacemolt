@@ -19,9 +19,9 @@ export function MessageHeader({
   return (
     <div className="flex items-center gap-1.5 mb-1">
       {icon}
-      <span className={`text-[10px] uppercase tracking-wider ${labelClass}`}>{label}</span>
+      <span className={`text-xs uppercase tracking-wider ${labelClass}`}>{label}</span>
       {children}
-      <span className="text-[10px] text-zinc-700 font-mono ml-auto">{timestamp.slice(11, 19)}</span>
+      <span className="text-xs text-zinc-700 font-mono ml-auto">{timestamp.slice(11, 19)}</span>
     </div>
   );
 }

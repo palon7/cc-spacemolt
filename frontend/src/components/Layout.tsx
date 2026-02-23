@@ -52,7 +52,7 @@ export function Layout({
   const [showDetail, setShowDetail] = useState(false);
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
+    <div className="h-dvh w-screen flex flex-col overflow-hidden">
       <TopBar connected={connected} gameStatus={gameStatus} gameState={gameState} />
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />
 
@@ -67,7 +67,7 @@ export function Layout({
                 onOpenDetail={() => setShowDetail(true)}
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-zinc-600">
+              <div className="flex items-center justify-center h-full text-sm text-zinc-600">
                 Waiting for game data...
               </div>
             )}
@@ -101,7 +101,7 @@ export function Layout({
                 onOpenDetail={() => setShowDetail(true)}
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-zinc-600">
+              <div className="flex items-center justify-center h-full text-sm text-zinc-600">
                 Waiting for game data...
               </div>
             ))}

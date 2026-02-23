@@ -36,20 +36,20 @@ export function SessionCard({
       className={`w-full text-left transition-colors ${variantClass}`}
     >
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-[10px] font-mono text-zinc-500">{formatDate(session.startedAt)}</span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-500">
+        <span className="text-xs font-mono text-zinc-500">{formatDate(session.startedAt)}</span>
+        <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-500">
           {session.model}
         </span>
         {isCurrent && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
             Current
           </span>
         )}
       </div>
       {session.lastMessage && (
-        <p className="text-[11px] text-zinc-400 truncate mb-1">{session.lastMessage}</p>
+        <p className="text-sm text-zinc-400 truncate mb-1">{session.lastMessage}</p>
       )}
-      <div className="flex items-center gap-3 text-[10px] text-zinc-600">
+      <div className="flex items-center gap-3 text-xs text-zinc-600">
         {session.totalCostUsd > 0 && (
           <span className="font-mono text-blue-400">${session.totalCostUsd.toFixed(4)}</span>
         )}

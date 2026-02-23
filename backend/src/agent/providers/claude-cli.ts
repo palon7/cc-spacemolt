@@ -58,17 +58,15 @@ export class ClaudeCliProvider implements AgentProvider {
   sendMessage(text: string): void {
     if (!this.process?.stdin || !this.process.stdin.writable) return;
 
-    const message = {
-      type: 'user',
+    const rawPayload = {
+      type: 'user' as const,
       session_id: this._sessionId,
-      parent_tool_use_id: null,
-      message: {
-        role: 'user',
-        content: text,
-      },
+      message: { role: 'user', content: text },
     };
 
-    this.process.stdin.write(JSON.stringify(message) + '\n');
+    this.process.stdin.write(JSON.stringify(rawPayload) + '\n');
+    this.callbacks?.onRawMessage(rawPayload);
+    this.callbacks?.onUserInput?.(text);
   }
 
   interrupt(): void {
@@ -208,19 +206,23 @@ export class ClaudeCliProvider implements AgentProvider {
       if (proc.stdin) {
         const text =
           this.initialPromptOverride || (resumeId ? 'Continue.' : this.config.initialPrompt);
-        const stdinMessage = JSON.stringify({
-          type: 'user',
+        const rawPayload = {
+          type: 'user' as const,
           ...(resumeId ? { session_id: resumeId } : {}),
-          message: {
-            role: 'user',
-            content: text,
-          },
-        });
+          message: { role: 'user', content: text },
+        };
         debug(
           'provider',
-          `Sending stdin message (resume=${!!resumeId}): ${stdinMessage.slice(0, 200)}`,
+          `Sending stdin message (resume=${!!resumeId}): ${JSON.stringify(rawPayload).slice(0, 200)}`,
         );
-        proc.stdin.write(stdinMessage + '\n');
+        proc.stdin.write(JSON.stringify(rawPayload) + '\n');
+
+        // Log and notify — the CLI does not echo stdin back in its output
+        this.callbacks?.onRawMessage(rawPayload);
+        const isExplicitUserInput = !!this.initialPromptOverride || !resumeId;
+        if (isExplicitUserInput && text) {
+          this.callbacks?.onUserInput?.(text);
+        }
       }
 
       // Parse stdout as NDJSON

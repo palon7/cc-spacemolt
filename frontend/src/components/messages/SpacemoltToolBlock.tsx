@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ToolCallEntry, ToolResultEntry } from '@cc-spacemolt/shared';
-import { IconCheck, IconX } from '../common/Icons';
+import { LuCheck, LuX } from 'react-icons/lu';
 
-// ─── G helpers: styled game-text spans ───────────────────────────────────────
+// G helpers: styled game-text spans
 const G = {
   item: (v: unknown): ReactNode => <span className="text-yellow-400 font-bold">{String(v)}</span>,
   system: (v: unknown): ReactNode => <span className="text-cyan-300 font-bold">{String(v)}</span>,
@@ -46,7 +46,7 @@ const G = {
   security: (v: unknown): ReactNode => <span className="text-blue-300">{String(v)}</span>,
 };
 
-// ─── Tool emoji ───────────────────────────────────────────────────────────────
+// Tool emoji
 const TOOL_EMOJI: Record<string, string> = {
   mine: '⛏️',
   travel: '🚀',
@@ -77,102 +77,94 @@ function getToolEmoji(shortName: string): string {
   return TOOL_EMOJI[shortName] ?? '⚪';
 }
 
-// ─── Action description ───────────────────────────────────────────────────────
-function formatAction(shortName: string, input: Record<string, unknown>): ReactNode {
+// Action label + detail
+const ACTION_LABELS: Record<string, string> = {
+  mine: 'Mine',
+  travel: 'Travel',
+  jump: 'Jump',
+  dock: 'Dock',
+  undock: 'Undock',
+  login: 'Login',
+  get_status: 'Status',
+  sell: 'Sell',
+  buy: 'Buy',
+  craft: 'Craft',
+  refuel: 'Refuel',
+  deposit_items: 'Deposit',
+  withdraw_items: 'Withdraw',
+  get_notifications: 'Notif',
+  chat: 'Chat',
+  get_ship: 'Ship',
+  get_poi: 'POI',
+  view_market: 'Market',
+  get_system: 'System',
+  scan: 'Scan',
+  attack: 'Attack',
+  forum_reply: 'Forum',
+  captains_log_add: 'Log',
+};
+
+function getActionLabel(shortName: string): string {
+  return ACTION_LABELS[shortName] ?? shortName;
+}
+
+function formatActionDetail(shortName: string, input: Record<string, unknown>): ReactNode | null {
   const itemId = input.item_id ?? input.item_name ?? '';
   const qty = input.quantity;
 
   switch (shortName) {
-    case 'mine':
-      return 'Mine';
     case 'travel':
-      return <>Travel → {G.poi(input.target_poi ?? '')}</>;
+      return <>→ {G.poi(input.target_poi ?? '')}</>;
     case 'jump':
-      return <>Jump → {G.system(input.target_system ?? '')}</>;
-    case 'dock':
-      return 'Dock';
-    case 'undock':
-      return 'Undock';
-    case 'login':
-      return 'Login';
-    case 'get_status':
-      return 'Get Status';
+      return <>→ {G.system(input.target_system ?? '')}</>;
     case 'sell':
-      return qty !== undefined ? (
-        <>
-          Sell {G.item(itemId)} {G.qty(qty)}
-        </>
-      ) : (
-        <>Sell {G.item(itemId)}</>
-      );
     case 'buy':
       return qty !== undefined ? (
         <>
-          Buy {G.item(itemId)} {G.qty(qty)}
+          {G.item(itemId)} {G.qty(qty)}
         </>
       ) : (
-        <>Buy {G.item(itemId)}</>
+        <>{G.item(itemId)}</>
       );
     case 'craft': {
       const recipe = input.recipe_id ?? itemId;
       return qty !== undefined ? (
         <>
-          Craft {G.item(recipe)} {G.qty(qty)}
+          {G.item(recipe)} {G.qty(qty)}
         </>
       ) : (
-        <>Craft {G.item(recipe)}</>
+        <>{G.item(recipe)}</>
       );
     }
-    case 'refuel':
-      return 'Refuel';
     case 'deposit_items':
-      return qty !== undefined ? (
-        <>
-          Deposit {G.item(itemId)} {G.qty(qty)}
-        </>
-      ) : (
-        <>Deposit {G.item(itemId)}</>
-      );
     case 'withdraw_items':
       return qty !== undefined ? (
         <>
-          Withdraw {G.item(itemId)} {G.qty(qty)}
+          {G.item(itemId)} {G.qty(qty)}
         </>
       ) : (
-        <>Withdraw {G.item(itemId)}</>
+        <>{G.item(itemId)}</>
       );
-    case 'get_notifications':
-      return 'Get Notifications';
     case 'chat': {
       const ch = input.channel ?? '';
       const msg = String(input.content ?? input.message ?? '');
       return (
         <>
-          Chat [{G.channel(ch)}]: {msg.length > 40 ? msg.slice(0, 40) + '…' : msg}
+          [{G.channel(ch)}]: {msg.length > 40 ? msg.slice(0, 40) + '…' : msg}
         </>
       );
     }
-    case 'get_ship':
-      return 'Get Ship';
-    case 'get_poi':
-      return 'Get POI';
     case 'view_market': {
       const mItem = input.item_id;
-      return mItem ? <>View Market ({G.item(mItem)})</> : 'View Market';
+      return mItem ? <>{G.item(mItem)}</> : null;
     }
-    case 'get_system':
-      return 'Get System';
     case 'scan':
-      return <>Scan {G.player(input.target_id ?? input.target_name ?? '')}</>;
+      return <>{G.player(input.target_id ?? input.target_name ?? '')}</>;
     case 'attack':
-      return <>Attack {G.player(input.target_id ?? input.target_name ?? '')}</>;
-    case 'forum_reply':
-      return 'Forum Reply';
-    case 'captains_log_add':
-      return "Captain's Log";
+      return <>→ {G.player(input.target_id ?? input.target_name ?? '')}</>;
     default: {
       const filtered = Object.entries(input).filter(([k]) => k !== 'session_id');
-      if (filtered.length === 0) return shortName;
+      if (filtered.length === 0) return null;
       const paramStr = filtered
         .slice(0, 3)
         .map(([k, v]) => {
@@ -181,12 +173,12 @@ function formatAction(shortName: string, input: Record<string, unknown>): ReactN
           return `${k}: ${val.slice(0, 30)}`;
         })
         .join(', ');
-      return `${shortName} (${paramStr})`;
+      return paramStr;
     }
   }
 }
 
-// ─── Result summary ───────────────────────────────────────────────────────────
+// Result summary
 interface ResultSummary {
   label: ReactNode;
   lines: ReactNode[];
@@ -699,7 +691,7 @@ function fGeneric(j: Record<string, unknown>): ResultSummary {
   return { label: '', lines };
 }
 
-// ─── Content formatter ────────────────────────────────────────────────────────
+// Content formatter
 function formatContent(raw: string): string {
   try {
     return JSON.stringify(JSON.parse(raw), null, 2);
@@ -708,7 +700,7 @@ function formatContent(raw: string): string {
   }
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// Main Component
 export function SpacemoltToolBlock({
   entry,
   result,
@@ -719,7 +711,8 @@ export function SpacemoltToolBlock({
   const [expanded, setExpanded] = useState(false);
   const shortName = entry.toolName.slice('mcp__spacemolt__'.length);
   const emoji = getToolEmoji(shortName);
-  const action = formatAction(shortName, entry.input);
+  const actionLabel = getActionLabel(shortName);
+  const actionDetail = formatActionDetail(shortName, entry.input);
 
   const isPending = !result;
   const isError = result?.isError ?? false;
@@ -746,35 +739,33 @@ export function SpacemoltToolBlock({
           <span className="shrink-0 w-3 h-3 rounded-full border border-t-amber-400 border-amber-400/20 animate-spin" />
         ) : isError ? (
           <span className="shrink-0 text-red-500">
-            <IconX />
+            <LuX size={16} />
           </span>
         ) : (
           <span className="shrink-0 text-emerald-500">
-            <IconCheck />
+            <LuCheck size={12} />
           </span>
         )}
 
-        {/* GAME badge */}
-        <span
-          className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded border font-mono ${badgeClass}`}
-        >
-          GAME
+        {/* Action badge */}
+        <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded border font-bold ${badgeClass}`}>
+          {emoji} {actionLabel}
         </span>
 
-        {/* Emoji + action */}
-        <span className="text-[10px] font-mono text-zinc-400 truncate min-w-0">
-          {emoji} {action}
-        </span>
+        {/* Action detail */}
+        {actionDetail && (
+          <span className="text-xs font-mono text-zinc-400 truncate min-w-0">{actionDetail}</span>
+        )}
 
         {/* Timestamp */}
-        <span className="text-[10px] text-zinc-700 font-mono ml-auto shrink-0">
+        <span className="text-xs text-zinc-700 font-mono ml-auto shrink-0">
           {entry.timestamp.slice(11, 19)}
         </span>
       </div>
 
       {/* Collapsed summary */}
       {result && !expanded && (
-        <div className="ml-4 mt-0.5 text-[10px] font-mono">
+        <div className="ml-4 mt-0.5 text-xs font-mono">
           {isError ? (
             <div className="text-red-400/60 truncate">{result.content.trim().slice(0, 80)}</div>
           ) : summary ? (
@@ -796,8 +787,8 @@ export function SpacemoltToolBlock({
           {/* Summary section (purple) */}
           {summary && (
             <div className="px-3 py-2 rounded-md border bg-purple-500/5 border-purple-500/10">
-              <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Summary</div>
-              <div className="text-[11px] font-mono space-y-0.5">
+              <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Summary</div>
+              <div className="text-sm font-mono space-y-0.5">
                 <div className="text-zinc-300">{summary.label}</div>
                 {summary.lines.map((line, i) => (
                   <div key={i} className="text-zinc-500">
@@ -818,9 +809,9 @@ export function SpacemoltToolBlock({
                   : 'bg-purple-500/5 border-purple-500/10'
             }`}
           >
-            <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Input</div>
+            <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Input</div>
             <pre
-              className={`text-[11px] font-mono whitespace-pre-wrap break-words ${
+              className={`text-sm font-mono whitespace-pre-wrap break-words ${
                 isPending ? 'text-amber-200/70' : isError ? 'text-red-200/60' : 'text-purple-200/60'
               }`}
             >
@@ -835,11 +826,11 @@ export function SpacemoltToolBlock({
                 isError ? 'bg-red-500/5 border-red-500/10' : 'bg-purple-500/5 border-purple-500/10'
               }`}
             >
-              <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">
+              <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">
                 {isError ? 'Error' : 'Result'}
               </div>
               <pre
-                className={`text-[11px] font-mono whitespace-pre-wrap break-words ${
+                className={`text-sm font-mono whitespace-pre-wrap break-words ${
                   isError ? 'text-red-200/60' : 'text-purple-200/60'
                 }`}
               >

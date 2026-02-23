@@ -8,7 +8,7 @@ export function TextMessage({ entry }: { entry: TextEntry }) {
       <MessageHeader
         icon={
           <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center shrink-0">
-            <span className="text-[6px] font-bold text-white">C</span>
+            <span className="text-2xs font-bold text-white">C</span>
           </div>
         }
         label="Agent"
@@ -26,7 +26,7 @@ export function TextMessage({ entry }: { entry: TextEntry }) {
           </div>
         )}
       </MessageHeader>
-      <div className="ml-4 text-[13px] text-zinc-300 break-words">
+      <div className="ml-4 text-base text-zinc-300 break-words">
         <MarkdownContent text={entry.text} />
         {entry.isStreaming && (
           <span className="inline-block w-0.5 h-3.5 bg-amber-400 ml-0.5 animate-pulse align-text-bottom" />
