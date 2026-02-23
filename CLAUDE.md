@@ -175,6 +175,7 @@ Configure via `data/config.json` (dev) or `~/.cc-spacemolt/config.json`. Main fi
 - When adding new features, actively consider writing tests.
 - Write docs and comments in English. Exception: translation files or language-specific files like `README-ja.md` should use their respective language.
 - Do not write obvious comments or comments that restate what the code clearly does.
+- When creating a pull request, please check `.github/pull_request_template.md` for the PR template.
 
 ## References
 
