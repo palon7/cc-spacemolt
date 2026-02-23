@@ -228,40 +228,30 @@ function fStatus(j: Record<string, unknown>): ResultSummary {
   };
 }
 
-function fSell(j: Record<string, unknown>): ResultSummary {
+function fTradeAction(verb: string, totalField: string, j: Record<string, unknown>): ResultSummary {
   const item = j.item_name ?? j.item_id ?? '';
   const qty = j.quantity ?? '';
-  const total = j.total_price ?? j.credits_earned ?? '';
+  const total = j.total_price ?? j[totalField] ?? '';
   return {
     label: total ? (
       <>
-        Sold {G.item(item)} {G.qty(qty)} for {G.credits(total)}
+        {verb} {G.item(item)} {G.qty(qty)} for {G.credits(total)}
       </>
     ) : (
       <>
-        Sold {G.item(item)} {G.qty(qty)}
+        {verb} {G.item(item)} {G.qty(qty)}
       </>
     ),
     lines: [],
   };
 }
 
+function fSell(j: Record<string, unknown>): ResultSummary {
+  return fTradeAction('Sold', 'credits_earned', j);
+}
+
 function fBuy(j: Record<string, unknown>): ResultSummary {
-  const item = j.item_name ?? j.item_id ?? '';
-  const qty = j.quantity ?? '';
-  const total = j.total_price ?? j.credits_spent ?? '';
-  return {
-    label: total ? (
-      <>
-        Bought {G.item(item)} {G.qty(qty)} for {G.credits(total)}
-      </>
-    ) : (
-      <>
-        Bought {G.item(item)} {G.qty(qty)}
-      </>
-    ),
-    lines: [],
-  };
+  return fTradeAction('Bought', 'credits_spent', j);
 }
 
 function fCraft(j: Record<string, unknown>): ResultSummary {
@@ -294,30 +284,25 @@ function fRefuel(j: Record<string, unknown>): ResultSummary {
   };
 }
 
-function fDeposit(j: Record<string, unknown>): ResultSummary {
+function fStorageAction(verb: string, j: Record<string, unknown>): ResultSummary {
   const item = j.item_name ?? j.item_id ?? '';
   const qty = j.quantity ?? '';
   return {
     label: (
       <>
-        Deposited {G.item(item)} {G.qty(qty)}
+        {verb} {G.item(item)} {G.qty(qty)}
       </>
     ),
     lines: [],
   };
 }
 
+function fDeposit(j: Record<string, unknown>): ResultSummary {
+  return fStorageAction('Deposited', j);
+}
+
 function fWithdraw(j: Record<string, unknown>): ResultSummary {
-  const item = j.item_name ?? j.item_id ?? '';
-  const qty = j.quantity ?? '';
-  return {
-    label: (
-      <>
-        Withdrew {G.item(item)} {G.qty(qty)}
-      </>
-    ),
-    lines: [],
-  };
+  return fStorageAction('Withdrew', j);
 }
 
 function fNotifications(j: Record<string, unknown>): ResultSummary {

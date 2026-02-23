@@ -1,6 +1,16 @@
 import type { ReactNode } from 'react';
 import { G } from './GameText';
 
+function itemQtyNode(id: unknown, qty: unknown): ReactNode {
+  return qty !== undefined ? (
+    <>
+      {G.item(id)} {G.qty(qty)}
+    </>
+  ) : (
+    <>{G.item(id)}</>
+  );
+}
+
 export function formatActionDetail(
   shortName: string,
   input: Record<string, unknown>,
@@ -15,32 +25,14 @@ export function formatActionDetail(
       return <>→ {G.system(input.target_system ?? '')}</>;
     case 'sell':
     case 'buy':
-      return qty !== undefined ? (
-        <>
-          {G.item(itemId)} {G.qty(qty)}
-        </>
-      ) : (
-        <>{G.item(itemId)}</>
-      );
+      return itemQtyNode(itemId, qty);
     case 'craft': {
       const recipe = input.recipe_id ?? itemId;
-      return qty !== undefined ? (
-        <>
-          {G.item(recipe)} {G.qty(qty)}
-        </>
-      ) : (
-        <>{G.item(recipe)}</>
-      );
+      return itemQtyNode(recipe, qty);
     }
     case 'deposit_items':
     case 'withdraw_items':
-      return qty !== undefined ? (
-        <>
-          {G.item(itemId)} {G.qty(qty)}
-        </>
-      ) : (
-        <>{G.item(itemId)}</>
-      );
+      return itemQtyNode(itemId, qty);
     case 'chat': {
       const ch = input.channel ?? '';
       const msg = String(input.content ?? input.message ?? '');
@@ -87,14 +79,7 @@ export function formatActionDetail(
     }
     case 'estimate_purchase': {
       const estItem = input.item_id ?? '';
-      const estQty = input.quantity;
-      return estQty !== undefined ? (
-        <>
-          {G.item(estItem)} {G.qty(estQty)}
-        </>
-      ) : (
-        <>{G.item(estItem)}</>
-      );
+      return itemQtyNode(estItem, input.quantity);
     }
     case 'withdraw_credits':
       return <>{G.credits(input.amount ?? '')}</>;
