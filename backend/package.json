@@ -3,19 +3,17 @@
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "tsx src/index.ts -- --debug --config-file ../data/config.json --log-dir ../data/logs --workspace ../data/workspace",
     "dev:watch": "tsx watch src/index.ts -- --debug --config-file ../data/config.json --log-dir ../data/logs --workspace ../data/workspace",
     "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node22 --sourcemap --outfile=dist/index.js --external:bufferutil --external:utf-8-validate --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\"",
-    "prepack": "npm run build && npm run typecheck",
     "typecheck": "tsc --noEmit"
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "engines": {
-    "node": ">=22"
   },
   "dependencies": {
     "@cc-spacemolt/shared": "*",
@@ -25,10 +23,12 @@
     "consola": "^3.4.2",
     "hono": "^4.8.5",
     "ora": "^9.3.0",
+    "update-notifier": "^7.3.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/update-notifier": "^6.0.8",
     "@types/ws": "^8.5.13",
     "esbuild": "^0.25.0",
     "tsx": "^4.19.0",

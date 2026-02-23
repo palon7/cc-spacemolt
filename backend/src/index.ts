@@ -137,8 +137,8 @@ const notifier = updateNotifier({ pkg: packageJson });
 if (notifier.update) {
   notifier.notify({ defer: false });
 }
-consola.info(`Workspace: ${workspacePath}`);
-consola.info(`Config: ${opts.configFile}`);
+console.log(`Workspace: ${workspacePath}`);
+console.log(`Config: ${opts.configFile}\n`);
 
 const gameDataSpinner = ora('Fetching game data...').start();
 let gameData;
