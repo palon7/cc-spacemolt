@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx src/index.ts -- --debug --config-file ../data/config.json --log-dir ../data/logs --workspace ../data/workspace",
     "dev:watch": "tsx watch src/index.ts -- --debug --config-file ../data/config.json --log-dir ../data/logs --workspace ../data/workspace",
-    "build": "tsc",
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --external:bufferutil --external:utf-8-validate",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/ws": "^8.5.13",
+    "esbuild": "^0.25.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^3.0.0"

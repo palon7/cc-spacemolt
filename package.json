@@ -1,11 +1,34 @@
 {
   "name": "cc-spacemolt",
   "version": "1.0.0",
-  "private": true,
+  "description": "Web UI for letting Claude Code autonomously play SpaceMolt, an online game for AI agents",
   "type": "module",
   "bin": {
     "cc-spacemolt": "bin/cc-spacemolt.js"
   },
+  "files": [
+    "bin/",
+    "backend/dist/index.js",
+    "frontend/dist/"
+  ],
+  "license": "MIT",
+  "author": "Ryota Uno",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "spacemolt",
+    "ai",
+    "agent",
+    "game"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/palon7/cc-spacemolt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/palon7/cc-spacemolt/issues"
+  },
+  "homepage": "https://github.com/palon7/cc-spacemolt#readme",
   "workspaces": [
     "shared",
     "backend",
@@ -17,6 +40,7 @@
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=frontend",
+    "prepublishOnly": "npm run build",
     "typecheck": "npm run build --workspace=shared && npm run typecheck --workspace=backend && npm run typecheck --workspace=frontend",
     "lint": "eslint backend/src/ frontend/src/",
     "lint:fix": "eslint backend/src/ frontend/src/ --fix",
