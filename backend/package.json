@@ -21,12 +21,14 @@
     "@inquirer/prompts": "^8.2.1",
     "commander": "^14.0.3",
     "consola": "^3.4.2",
+    "cross-spawn": "^7.0.6",
     "hono": "^4.8.5",
     "ora": "^9.3.0",
     "update-notifier": "^7.3.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/cross-spawn": "^6.0.6",
     "@types/node": "^22.0.0",
     "@types/update-notifier": "^6.0.8",
     "@types/ws": "^8.5.13",

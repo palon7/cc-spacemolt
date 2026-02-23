@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import spawn from 'cross-spawn';
 import type { ChildProcess } from 'child_process';
 import { createInterface } from 'readline';
 import type { AgentProvider, ProviderCallbacks } from '../provider.js';
@@ -189,14 +189,10 @@ export class ClaudeCliProvider implements AgentProvider {
       const cwd = this.workspacePath;
       debug('provider', 'Spawning: claude with args:', args);
       debug('provider', 'CWD:', cwd);
-      const command = 'claude';
-      const proc = spawn(command, args, {
+      const proc = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd,
         env: { ...process.env },
-        // On Windows, .cmd files cannot be spawned directly (CreateProcess API limitation);
-        // shell: true routes through cmd.exe which can execute batch scripts.
-        shell: process.platform === 'win32',
       });
       this.process = proc;
       debug('provider', `Process spawned, pid=${proc.pid}`);
