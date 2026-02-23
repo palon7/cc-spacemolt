@@ -198,6 +198,7 @@ export class ClaudeCliProvider implements AgentProvider {
         env: { ...process.env },
         // On Windows, .cmd files cannot be spawned directly (CreateProcess API limitation);
         // shell: true routes through cmd.exe which can execute batch scripts.
+        shell: process.platform === 'win32',
       });
       this.process = proc;
       debug('provider', `Process spawned, pid=${proc.pid}`);
