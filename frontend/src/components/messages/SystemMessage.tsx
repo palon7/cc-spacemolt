@@ -11,10 +11,10 @@ export function SystemMessage({ entry }: { entry: SystemEntry }) {
         timestamp={entry.timestamp}
       />
       <div className="ml-3 space-y-0.5">
-        <div className="text-[11px] text-zinc-400">
+        <div className="text-sm text-zinc-400">
           <span className="text-zinc-600">ID:</span> {entry.sessionId}
         </div>
-        <div className="text-[11px] text-zinc-400">
+        <div className="text-sm text-zinc-400">
           <span className="text-zinc-600">Model:</span> {entry.model}
         </div>
       </div>

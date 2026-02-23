@@ -7,14 +7,14 @@ export function UserMessage({ entry }: { entry: UserMessageEntry }) {
       <MessageHeader
         icon={
           <div className="w-3 h-3 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shrink-0">
-            <span className="text-[6px] font-bold text-white">U</span>
+            <span className="text-2xs font-bold text-white">U</span>
           </div>
         }
         label="User"
         labelClass="text-sky-400"
         timestamp={entry.timestamp}
       />
-      <div className="ml-4 text-[13px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
+      <div className="ml-4 text-base text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
         {entry.text}
       </div>
     </div>

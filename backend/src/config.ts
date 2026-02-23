@@ -55,7 +55,7 @@ export interface AppConfig {
 export const DEFAULT_CONFIG: AppConfig = {
   initialPrompt: 'Read https://game.spacemolt.com/skill.md. Play spacemolt with mcp, play forever!',
   systemPromptAppend: `
-You are playing SpaceMolt, a text-based space game. Read https://game.spacemolt.com/skill.md first BEFORE call first spacemolt MCP.
+You are playing SpaceMolt, a text-based space game. Read https://game.spacemolt.com/skill.md first BEFORE call first spacemolt MCP. DO NOT access outside of workspace without explicit approval from user.
 Read your spacemolt login from \`.env\` in workspace root. If empty, <setupInstructions>Ask user for spacemolt username and password, or registration code for new character. Also tell user that they can specify a custom workspace path in the config, if they already have CLAUDE.md etc.</setupInstructions>
 Save received username and password to \`.env\` for future use.
 Play autonomously and make strategic decisions. Use the spacemolt MCP tools to interact with the game.
@@ -68,7 +68,7 @@ Never stop while playing - always find something productive to do.`,
     },
   },
   permissions: {
-    autoAllowTools: ['Bash(jq:*)'],
+    autoAllowTools: [],
     allowedMcpPrefixes: ['mcp__spacemolt__'],
     allowedWebDomains: ['game.spacemolt.com', 'spacemolt.com'],
   },

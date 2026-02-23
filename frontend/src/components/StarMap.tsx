@@ -2,7 +2,7 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import type { GameState, TravelHistoryEntry } from '@cc-spacemolt/shared';
 import { useMapData, resolveSystem, type MapData } from '../hooks/useMapData';
 
-// ── display constants ────────────────────────────────────────────────
+// display constants
 const BG_COLOR = '#0a0a12';
 const EDGE_COLOR = 'rgba(70, 90, 130, 0.12)';
 const EDGE_WIDTH = 1;
@@ -84,7 +84,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
   const mapDataRef = useRef<MapData | null>(null);
   mapDataRef.current = mapData;
 
-  // ── ResizeObserver ──────────────────────────────────────────────────
+  // ResizeObserver
   const containerCallbackRef = useCallback((node: HTMLDivElement | null) => {
     containerRef.current = node;
   }, []);
@@ -107,7 +107,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     return () => observer.disconnect();
   }, [mapData]);
 
-  // ── Update animation target on system change ───────────────────────
+  // Update animation target on system change
   useEffect(() => {
     if (!mapData) return;
     const currentName = gameState.player.current_system;
@@ -126,7 +126,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     prevSystem.current = currentName;
   }, [gameState.player.current_system, mapData]);
 
-  // ── Re-center handler ──────────────────────────────────────────────
+  // Re-center handler
   const handleRecenter = useCallback(() => {
     const md = mapDataRef.current;
     const gs = gameStateRef.current;
@@ -137,10 +137,25 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     setTracking(true);
   }, []);
 
-  // ── Drag + wheel ───────────────────────────────────────────────────
+  // Drag + wheel
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Shared pan helper: applies a drag offset (in CSS px) to the camera.
+    // Used by both mouse and single-touch drag so behaviour stays in sync.
+    const applyPan = (dx: number, dy: number) => {
+      const z = zoom.current;
+      const newCenter = {
+        x: dragStartCenter.current.x - dx / z,
+        y: dragStartCenter.current.y - dy / z,
+      };
+      animCurrent.current = newCenter;
+      animTarget.current = newCenter;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        setTracking(false);
+      }
+    };
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -160,19 +175,8 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
 
     const onMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
-      const dx = e.clientX - dragStart.current.x;
-      const dy = e.clientY - dragStart.current.y;
-      const z = zoom.current;
-      const newCenter = {
-        x: dragStartCenter.current.x - dx / z,
-        y: dragStartCenter.current.y - dy / z,
-      };
-      animCurrent.current = newCenter;
-      animTarget.current = newCenter;
       // Stop auto-tracking once user drags
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        setTracking(false);
-      }
+      applyPan(e.clientX - dragStart.current.x, e.clientY - dragStart.current.y);
     };
 
     const onMouseUp = () => {
@@ -182,20 +186,117 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     };
 
+    // Touch events
+    let pinchStartDist = 0;
+    let pinchStartZoom = 0;
+    // Cached bounding rect for pinch zoom — avoids triggering layout reflow
+    // on every touchmove. Refreshed at pinch start; null-checked as fallback.
+    let pinchRect: DOMRect | null = null;
+
+    const getTouchDist = (t: TouchList) =>
+      Math.hypot(t[0]!.clientX - t[1]!.clientX, t[0]!.clientY - t[1]!.clientY);
+
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        isDragging.current = true;
+        dragStart.current = { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY };
+        dragStartCenter.current = {
+          x: animCurrent.current?.x ?? 0,
+          y: animCurrent.current?.y ?? 0,
+        };
+      } else if (e.touches.length === 2) {
+        isDragging.current = false;
+        pinchStartDist = getTouchDist(e.touches);
+        pinchStartZoom = zoom.current;
+        pinchRect = canvas.getBoundingClientRect(); // cache once at pinch start
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging.current) {
+        applyPan(
+          e.touches[0]!.clientX - dragStart.current.x,
+          e.touches[0]!.clientY - dragStart.current.y,
+        );
+      } else if (e.touches.length === 2 && pinchStartDist > 0) {
+        const dist = getTouchDist(e.touches);
+        const scale = dist / pinchStartDist;
+        const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoom * scale));
+
+        // Zoom towards the midpoint between the two fingers so the pinched
+        // world position stays fixed under the user's fingers.
+        // Use the rect cached at pinch start to avoid layout reflow per frame.
+        const rect = pinchRect ?? canvas.getBoundingClientRect();
+        const midX = (e.touches[0]!.clientX + e.touches[1]!.clientX) / 2 - rect.left;
+        const midY = (e.touches[0]!.clientY + e.touches[1]!.clientY) / 2 - rect.top;
+        const halfW = rect.width / 2;
+        const halfH = rect.height / 2;
+        // Offset of the pinch midpoint from the canvas centre (CSS px)
+        const dx = midX - halfW;
+        const dy = midY - halfH;
+        const currentCenter = animCurrent.current ?? { x: 0, y: 0 };
+        // World-space coordinates under the pinch midpoint (at old zoom)
+        const worldX = dx / zoom.current + currentCenter.x;
+        const worldY = dy / zoom.current + currentCenter.y;
+        // Shift the camera so that world point stays under the pinch midpoint
+        zoom.current = newZoom;
+        animCurrent.current = { x: worldX - dx / newZoom, y: worldY - dy / newZoom };
+        animTarget.current = { ...animCurrent.current };
+        setTracking(false);
+      }
+    };
+
+    // passive: true — onTouchEnd never calls preventDefault(), so there is no
+    // need to block browser optimisations with a non-passive listener.
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 0) {
+        isDragging.current = false;
+        pinchStartDist = 0;
+        pinchRect = null;
+      } else if (e.touches.length === 1) {
+        // Transition from pinch back to single-finger drag
+        isDragging.current = true;
+        dragStart.current = { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY };
+        dragStartCenter.current = {
+          x: animCurrent.current?.x ?? 0,
+          y: animCurrent.current?.y ?? 0,
+        };
+        pinchStartDist = 0;
+        pinchRect = null;
+      }
+    };
+
+    // Reset all touch state when the interaction is interrupted (incoming call, etc.)
+    const onTouchCancel = () => {
+      isDragging.current = false;
+      pinchStartDist = 0;
+      pinchRect = null;
+    };
+
     canvas.style.cursor = 'grab';
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: true });
+    canvas.addEventListener('touchcancel', onTouchCancel, { passive: true });
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchcancel', onTouchCancel);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
   }, [mapData]);
 
-  // ── Main render loop ───────────────────────────────────────────────
+  // Main render loop
   useEffect(() => {
     const loop = () => {
       const md = mapDataRef.current;
@@ -237,11 +338,11 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
   return (
     <div ref={containerCallbackRef} className="w-full h-full relative overflow-hidden">
       {!mapData ? (
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] text-zinc-600">
+        <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-600">
           Loading map...
         </div>
       ) : null}
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      <canvas ref={canvasRef} className="block w-full h-full" style={{ touchAction: 'none' }} />
       <button
         onClick={() => setShowHistory((v) => !v)}
         className={`absolute bottom-1.5 ${!tracking ? 'right-14' : 'right-1.5'} p-1 rounded bg-zinc-800/80 border border-zinc-700/50 hover:bg-zinc-700/80 transition-colors ${showHistory ? 'text-orange-400' : 'text-zinc-600'}`}
@@ -263,7 +364,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       {!tracking && (
         <button
           onClick={handleRecenter}
-          className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[9px] rounded bg-zinc-800/80 border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/80 transition-colors"
+          className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-2xs rounded bg-zinc-800/80 border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/80 transition-colors"
           title="Center on current system"
         >
           Re-center
@@ -272,7 +373,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     </div>
   );
 
-  // ── Drawing function ───────────────────────────────────────────────
+  // Drawing function
   function draw(ctx: CanvasRenderingContext2D, md: MapData, gs: GameState): void {
     const { w: W, h: H } = canvasSize.current;
     if (W === 0 || H === 0) return;
@@ -302,7 +403,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
     const currentSys = resolveSystem(md, gs.player.current_system);
     const destSys = gs.travel_destination ? resolveSystem(md, gs.travel_destination) : null;
 
-    // ── Edges ──────────────────────────────────────────────────────
+    // Edges
     ctx.strokeStyle = EDGE_COLOR;
     ctx.lineWidth = EDGE_WIDTH;
     const drawnEdges = new Set<string>();
@@ -327,7 +428,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     }
 
-    // ── Travel history routes ──────────────────────────────────────
+    // Travel history routes
     if (showHistoryRef.current && routeCountsRef.current.size > 0) {
       ctx.lineWidth = 2;
       for (const [key, count] of routeCountsRef.current) {
@@ -347,7 +448,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     }
 
-    // ── Travel line ────────────────────────────────────────────────
+    // Travel line
     if (currentSys && destSys) {
       const [ax, ay] = toScreen(currentSys.x, currentSys.y);
       const [bx, by] = toScreen(destSys.x, destSys.y);
@@ -372,7 +473,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       }
     }
 
-    // ── Nodes ──────────────────────────────────────────────────────
+    // Nodes
     for (const sys of md.systems) {
       const [sx, sy] = toScreen(sys.x, sys.y);
       if (!inView(sx, sy)) continue;
@@ -425,7 +526,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       ctx.fill();
     }
 
-    // ── Labels ─────────────────────────────────────────────────────
+    // Labels
     const cx = cw / 2;
     const cy = ch / 2;
 

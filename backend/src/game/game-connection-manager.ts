@@ -119,7 +119,6 @@ export class GameConnectionManager {
     this.lastPassword = '';
     this._gameStatus = { status: 'paused', message: 'Agent not running' };
     this.broadcaster?.onGameStatus(this._gameStatus);
-    consola.log('SpaceMolt game connection paused (agent not running)');
     debug('game', 'GameConnectionManager paused');
   }
 

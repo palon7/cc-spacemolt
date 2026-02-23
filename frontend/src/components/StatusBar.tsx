@@ -41,7 +41,7 @@ export function StatusBar({
   const displayStatus = isCompacting ? 'COMPACTING' : status.toUpperCase();
 
   return (
-    <div className="flex items-center gap-4 px-4 py-2 bg-gray-900 border-b border-gray-800 text-sm shrink-0">
+    <div className="flex items-center gap-4 px-4 py-2 bg-gray-900 border-b border-gray-800 text-base shrink-0">
       {/* Connection indicator */}
       <span className={connected ? 'text-green-400' : 'text-red-400'}>{connected ? '●' : '○'}</span>
 
@@ -76,13 +76,13 @@ export function StatusBar({
         <div className="flex gap-2">
           <button
             onClick={onInterrupt}
-            className="px-2 py-0.5 text-xs bg-yellow-900 text-yellow-300 rounded hover:bg-yellow-800"
+            className="px-2 py-0.5 text-sm bg-yellow-900 text-yellow-300 rounded hover:bg-yellow-800"
           >
             Interrupt
           </button>
           <button
             onClick={onAbort}
-            className="px-2 py-0.5 text-xs bg-red-900 text-red-300 rounded hover:bg-red-800"
+            className="px-2 py-0.5 text-sm bg-red-900 text-red-300 rounded hover:bg-red-800"
           >
             Abort
           </button>

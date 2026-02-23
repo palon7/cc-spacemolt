@@ -17,8 +17,8 @@ export function GaugeBar({ label, value, max }: GaugeBarProps) {
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between">
-        <span className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</span>
-        <span className="font-mono text-[11px] text-zinc-300">
+        <span className="text-xs uppercase tracking-widest text-zinc-500">{label}</span>
+        <span className="font-mono text-sm text-zinc-300">
           {value ?? '?'}
           <span className="text-zinc-600">/{max ?? '?'}</span>
         </span>

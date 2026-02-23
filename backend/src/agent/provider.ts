@@ -9,6 +9,8 @@ export interface ProviderCallbacks {
   onError: (error: Error) => void;
   /** stderr output from the underlying process */
   onStderr?: (data: string) => void;
+  /** Text that the provider actually sent to stdin on behalf of the user */
+  onUserInput?: (text: string) => void;
 }
 
 /**

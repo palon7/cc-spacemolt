@@ -1,5 +1,23 @@
 @import 'tailwindcss';
 
+@theme {
+  /* App-specific font sizes — mobile values (used as default) */
+  --font-size-2xs: 0.625rem; /* 10px — 旧 text-[9px] / text-[10px] 相当 */
+  --font-size-xs: 0.6875rem; /* 11px — 旧 text-[10px] / text-[11px] 相当 */
+  --font-size-sm: 0.75rem; /* 12px — 旧 text-xs / text-[12px] 相当 */
+  --font-size-base: 0.875rem; /* 14px — 旧 text-sm 相当 */
+}
+
+/* PC (md以上) ではフォントサイズを少し小さくする */
+@media (min-width: 768px) {
+  :root {
+    --font-size-2xs: 0.5625rem; /* 9px */
+    --font-size-xs: 0.625rem; /* 10px */
+    --font-size-sm: 0.6875rem; /* 11px */
+    --font-size-base: 0.75rem; /* 12px */
+  }
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
   height: 4px;

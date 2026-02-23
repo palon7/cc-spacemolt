@@ -307,7 +307,7 @@ function parseUserMessage(message: StreamJsonMessage, nameMap: Map<string, strin
   const content = msg.content;
 
   if (typeof content === 'string') {
-    if (!message.isSynthetic) {
+    if (!message.isSynthetic && !message.parent_tool_use_id) {
       entries.push({
         id: randomUUID(),
         timestamp: new Date().toISOString(),
@@ -347,7 +347,7 @@ function parseUserMessage(message: StreamJsonMessage, nameMap: Map<string, strin
       // Delete the entry after tool_result processing to prevent memory leaks
       nameMap.delete(toolUseId);
     } else if (block.type === 'text') {
-      if (!message.isSynthetic) {
+      if (!message.isSynthetic && !message.parent_tool_use_id) {
         entries.push({
           id: randomUUID(),
           timestamp: new Date().toISOString(),

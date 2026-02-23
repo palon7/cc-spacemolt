@@ -1,7 +1,7 @@
 import type { GameState } from '@cc-spacemolt/shared';
 import { GaugeBar } from './common/GaugeBar';
 import { Chip } from './common/Chip';
-import { IconX } from './common/Icons';
+import { LuX } from 'react-icons/lu';
 import { Modal } from './common/Modal';
 
 interface ShipDetailModalProps {
@@ -29,14 +29,14 @@ export function ShipDetailModal({ state, onClose }: ShipDetailModalProps) {
     <Modal onClose={onClose} maxWidth="max-w-lg">
       <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800 shrink-0">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">{ship.name}</h3>
-          <span className="text-[10px] text-zinc-500">{ship.class_id.replace(/_/g, ' ')}</span>
+          <h3 className="text-base font-semibold text-zinc-100">{ship.name}</h3>
+          <span className="text-xs text-zinc-500">{ship.class_id.replace(/_/g, ' ')}</span>
         </div>
         <button
           onClick={onClose}
           className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
         >
-          <IconX />
+          <LuX size={16} />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
@@ -47,7 +47,7 @@ export function ShipDetailModal({ state, onClose }: ShipDetailModalProps) {
           <GaugeBar label="Cargo" value={ship.cargo_used} max={ship.cargo_capacity} />
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-2">Ship Stats</div>
+          <div className="text-xs uppercase tracking-widest text-zinc-600 mb-2">Ship Stats</div>
           <div className="grid grid-cols-4 gap-1.5">
             <Chip label="Armor" value={ship.armor} />
             <Chip label="Speed" value={ship.speed} />
@@ -60,7 +60,7 @@ export function ShipDetailModal({ state, onClose }: ShipDetailModalProps) {
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-2">
+          <div className="text-xs uppercase tracking-widest text-zinc-600 mb-2">
             Modules ({modules.length})
           </div>
           {modules.map((m) => {
@@ -73,12 +73,12 @@ export function ShipDetailModal({ state, onClose }: ShipDetailModalProps) {
                 className="p-2.5 rounded-lg bg-zinc-800/40 border border-zinc-700/50 mb-1.5"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-zinc-200">{m.name}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-700/60 text-zinc-400 border border-zinc-700">
+                  <span className="text-base font-medium text-zinc-200">{m.name}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-700/60 text-zinc-400 border border-zinc-700">
                     {m.quality_grade}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm">
                   <span className="text-zinc-500">
                     CPU <span className="text-zinc-400">{m.cpu_usage}</span>
                   </span>
@@ -101,11 +101,11 @@ export function ShipDetailModal({ state, onClose }: ShipDetailModalProps) {
             );
           })}
           {modules.length === 0 && (
-            <div className="text-xs text-zinc-600 italic py-2">No modules installed</div>
+            <div className="text-sm text-zinc-600 italic py-2">No modules installed</div>
           )}
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-2">
+          <div className="text-xs uppercase tracking-widest text-zinc-600 mb-2">
             Cargo ({ship.cargo?.length || 0})
           </div>
           <div className="space-y-1">
@@ -114,25 +114,25 @@ export function ShipDetailModal({ state, onClose }: ShipDetailModalProps) {
                 key={c.item_id}
                 className="flex items-center justify-between py-1.5 px-2.5 rounded bg-zinc-800/30 border border-zinc-800/50"
               >
-                <span className="text-xs text-zinc-300">{c.item_id.replace(/_/g, ' ')}</span>
-                <span className="font-mono text-xs text-amber-300">&times;{c.quantity}</span>
+                <span className="text-sm text-zinc-300">{c.item_id.replace(/_/g, ' ')}</span>
+                <span className="font-mono text-sm text-amber-300">&times;{c.quantity}</span>
               </div>
             ))}
             {(!ship.cargo || !ship.cargo.length) && (
-              <div className="text-xs text-zinc-600 italic">Empty</div>
+              <div className="text-sm text-zinc-600 italic">Empty</div>
             )}
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-2">Skills</div>
+          <div className="text-xs uppercase tracking-widest text-zinc-600 mb-2">Skills</div>
           <div className="grid grid-cols-2 gap-1">
             {Object.entries(player.skills).map(([k, v]) => (
               <div
                 key={k}
                 className="flex items-center justify-between px-2 py-1 rounded bg-zinc-800/30"
               >
-                <span className="text-[11px] text-zinc-400">{k.replace(/_/g, ' ')}</span>
-                <span className="font-mono text-[11px] text-violet-400">Lv.{v}</span>
+                <span className="text-sm text-zinc-400">{k.replace(/_/g, ' ')}</span>
+                <span className="font-mono text-sm text-violet-400">Lv.{v}</span>
               </div>
             ))}
           </div>
