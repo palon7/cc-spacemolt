@@ -104,7 +104,8 @@ export function formatActionDetail(
         .slice(0, 3)
         .map(([k, v]) => {
           if (k === 'password') return `${k}: ****`;
-          const val = typeof v === 'string' ? v : JSON.stringify(v);
+          const json = typeof v === 'string' ? v : JSON.stringify(v);
+          const val = json ?? String(v ?? '');
           return `${k}: ${val.slice(0, 30)}`;
         })
         .join(', ');

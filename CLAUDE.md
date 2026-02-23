@@ -117,7 +117,7 @@ cc-spacemolt/
 - **Credentials via .env watch**: Read `SPACEMOLT_USERNAME/PASSWORD` from `.env` in the workspace directory; auto-reconnect when the file changes.
 - **Static game data**: On startup, fetch star system, station, and empire data from the REST API (`/api/map`, `/api/stations`) and serve it via `GET /api/map`.
 - **Provider pattern**: Abstracted via the `AgentProvider` interface. The `supportsInput` flag handles CLIs that don't accept runtime input.
-- **Memory management**: Drop old entries from memory when count exceeds `maxLogEntries` (default 5000). All entries are still written to log files.
+- **Memory management**: Drop old entries from memory when count exceeds `maxLogEntries` (default 1000). All entries are still written to log files.
 - **3-panel dashboard**: 12-column grid — Ship (col-span-3) / Claude Code (col-span-5) / Events (col-span-4). Mobile uses tab switching. Dark theme (zinc color palette).
 - **Canvas star map**: Rendered in a `requestAnimationFrame` loop. LERP-interpolated camera movement, current-location highlight, movement animation, drag and zoom support.
 - **Single-hook state management**: `useWebSocket` manages all application state. No external state library; state is passed down via props.
@@ -145,7 +145,7 @@ Configure via `data/config.json` (dev) or `~/.cc-spacemolt/config.json`. Main fi
 - `systemPromptAppend` — additional instructions appended to the system prompt
 - `mcpServers` — MCP server config (stdio/http/sse)
 - `permissions` — `autoAllowTools`, `allowedMcpPrefixes`, `allowedWebDomains`
-- `maxLogEntries` — max entries kept in memory (default: 5000)
+- `maxLogEntries` — max entries kept in memory (default: 1000)
 - `model` — model to use (default: "sonnet")
 - `workspacePath` — working directory for Claude CLI
 - `language` — response language

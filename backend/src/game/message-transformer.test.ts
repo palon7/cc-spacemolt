@@ -140,6 +140,24 @@ describe('mergeStateUpdate', () => {
     expect(arrived.travel_destination).toBeNull();
   });
 
+  it('travel fields are cleared when omitted from state_update', () => {
+    const traveling = mergeStateUpdate(emptyState, {
+      tick: 2,
+      travel_progress: 0.5,
+      travel_destination: 'Mars',
+      travel_type: 'jump',
+      travel_arrival_tick: 100,
+    });
+    expect(traveling.travel_progress).toBe(0.5);
+
+    // Server omits travel fields after arrival
+    const afterArrival = mergeStateUpdate(traveling, { tick: 3 });
+    expect(afterArrival.travel_progress).toBeNull();
+    expect(afterArrival.travel_destination).toBeNull();
+    expect(afterArrival.travel_type).toBeNull();
+    expect(afterArrival.travel_arrival_tick).toBeNull();
+  });
+
   it('in_combat is updated', () => {
     const result = mergeStateUpdate(emptyState, { tick: 2, in_combat: true });
     expect(result.in_combat).toBe(true);
@@ -230,7 +248,7 @@ describe('transformEventMessage - movement', () => {
       poi_name: 'Station Alpha',
       clan_tag: 'RED',
     });
-    expect(e.summary).toBe('Bob(clan=RED) arrived at Station Alpha');
+    expect(e.summary).toBe('Bob [RED] arrived at Station Alpha');
   });
 
   it('poi_departure', () => {
@@ -239,7 +257,7 @@ describe('transformEventMessage - movement', () => {
       poi_name: 'Station Alpha',
       clan_tag: null,
     });
-    expect(e.summary).toBe('Bob(clan=No clan) departed from Station Alpha');
+    expect(e.summary).toBe('Bob departed from Station Alpha');
   });
 
   it('poi_departure (clan_tag="")', () => {
@@ -248,7 +266,7 @@ describe('transformEventMessage - movement', () => {
       poi_name: 'Station Alpha',
       clan_tag: '',
     });
-    expect(e.summary).toBe('Bob(clan=No clan) departed from Station Alpha');
+    expect(e.summary).toBe('Bob departed from Station Alpha');
   });
 
   it('state_change (different system) -> Traveled to', () => {
