@@ -142,8 +142,10 @@ async function buildSessionSummary(
   const stat = await fsp.stat(rawPath);
 
   let firstMsg: StreamJsonMessage | null = null;
+  let systemMsg: StreamJsonMessage | null = null;
   let lastResultMsg: StreamJsonMessage | null = null;
-  let lastAssistantMsg: StreamJsonMessage | null = null;
+  let lastMessage: string | undefined;
+  let assistantCount = 0;
   let lineCount = 0;
 
   // Stream line-by-line to avoid loading the entire file into memory
@@ -160,22 +162,27 @@ async function buildSessionSummary(
       continue;
     }
     if (!firstMsg) firstMsg = msg;
+    if (msg.type === 'system') systemMsg = msg;
     if (msg.type === 'result') lastResultMsg = msg;
-    if (msg.type === 'assistant') lastAssistantMsg = msg;
+    if (msg.type === 'assistant') {
+      assistantCount++;
+      const text = extractAssistantText(msg);
+      if (text) lastMessage = text;
+    }
   }
 
   if (!firstMsg) return null;
 
   return {
-    sessionId: firstMsg.session_id ?? dirName,
-    model: firstMsg.model ?? 'unknown',
+    sessionId: systemMsg?.session_id ?? firstMsg.session_id ?? dirName,
+    model: systemMsg?.model ?? firstMsg.model ?? 'unknown',
     totalCostUsd: lastResultMsg?.total_cost_usd ?? 0,
-    numTurns: lastResultMsg?.num_turns ?? 0,
-    durationMs: lastResultMsg?.duration_ms ?? 0,
+    numTurns: lastResultMsg?.num_turns ?? assistantCount,
+    durationMs: lastResultMsg?.duration_ms ?? stat.mtime.getTime() - stat.birthtime.getTime(),
     startedAt: stat.birthtime.toISOString(),
     lastModified: stat.mtime.toISOString(),
     entryCount: lineCount,
-    lastMessage: lastAssistantMsg ? extractAssistantText(lastAssistantMsg) : undefined,
+    lastMessage,
   };
 }
 
