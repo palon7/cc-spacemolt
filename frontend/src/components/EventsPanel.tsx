@@ -78,9 +78,9 @@ export function EventsPanel({ events }: EventsPanelProps) {
         ))}
       </div>
       <div className="flex-1 overflow-y-auto px-2 py-1 custom-scrollbar">
-        {filtered.map((e, i) => (
+        {filtered.map((e) => (
           <div
-            key={`${e.ts}-${i}`}
+            key={e.id}
             className="flex items-start gap-1.5 py-1.5 px-1.5 rounded hover:bg-zinc-800/40 transition-colors"
           >
             <span className="font-mono text-xs text-zinc-700 mt-0.5 shrink-0 hidden sm:inline">
@@ -90,17 +90,17 @@ export function EventsPanel({ events }: EventsPanelProps) {
               {e.ts.slice(11, 16)}
             </span>
             <span
-              className={`text-2xs px-1.5 py-0.5 rounded border font-medium shrink-0 ${
+              className={`text-xs px-1.5 py-0.5 rounded border font-medium shrink-0 ${
                 EVT_BADGE[e.type] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20'
               }`}
             >
               {EVT_LABEL[e.type] || e.type}
             </span>
-            <span className="text-sm text-zinc-400 leading-relaxed break-all">{e.summary}</span>
+            <span className="text-xs text-zinc-400 leading-relaxed break-all">{e.summary}</span>
           </div>
         ))}
         {!filtered.length && (
-          <div className="text-sm text-zinc-600 italic p-4 text-center">No events</div>
+          <div className="text-xs text-zinc-600 italic p-4 text-center">No events</div>
         )}
       </div>
     </div>

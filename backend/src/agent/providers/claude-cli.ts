@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { createInterface } from 'readline';
 import type { AgentProvider, ProviderCallbacks } from '../provider.js';
-import { parseMessage, resetStreamingState } from '../message-parser.js';
+import { parseMessage, resetParserState } from '../message-parser.js';
 import type { StreamJsonMessage } from '../message-parser.js';
 import type { AppConfig } from '../../config.js';
 import { debug } from '../../logger/debug-logger.js';
@@ -47,9 +47,9 @@ export class ClaudeCliProvider implements AgentProvider {
     const resuming = this.isResuming;
     this.isResuming = false;
 
-    if (resuming) {
-      resetStreamingState();
-    }
+    // Reset full parser state (toolNameMap + streamingBlockMap) on every session start
+    // to prevent stale entries from leaking across sessions.
+    resetParserState();
 
     debug('provider', `runProcess(resuming=${resuming})`);
     await this.runProcess(resuming);

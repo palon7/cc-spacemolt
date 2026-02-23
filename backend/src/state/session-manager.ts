@@ -51,35 +51,8 @@ export class SessionManager {
 
   async start(initialPrompt?: string): Promise<void> {
     this.setStatus('starting');
-
-    const providerCallbacks: ProviderCallbacks = {
-      onMessage: (entry) => this.handleEntry(entry),
-      onRawMessage: (raw) => this.handleRawMessage(raw),
-      onError: (error) => this.handleError(error),
-      onStderr: (data) => this.handleStderr(data),
-      onUserInput: (text) => this.addUserMessage(text),
-    };
-
     debug('session-manager', 'Calling provider.start()');
-    try {
-      await this.provider.start(providerCallbacks, initialPrompt);
-      if (this.isResuming) {
-        this.emitInterruptedEntry();
-        this.setStatus('interrupted');
-      } else {
-        this.setStatus('done');
-      }
-    } catch (err) {
-      debug('session-manager', `provider.start() rejected: ${err}`);
-      consola.error('Failed to start session:', err);
-
-      if (this.isResuming) {
-        this.emitInterruptedEntry();
-        this.setStatus('interrupted');
-      } else {
-        this.setStatus('done');
-      }
-    }
+    await this.runProvider(initialPrompt);
   }
 
   sendMessage(text: string): void {
@@ -111,38 +84,13 @@ export class SessionManager {
       this.provider.setResumeSessionId?.(resumeId);
     }
 
-    const providerCallbacks: ProviderCallbacks = {
-      onMessage: (entry) => this.handleEntry(entry),
-      onRawMessage: (raw) => this.handleRawMessage(raw),
-      onError: (error) => this.handleError(error),
-      onStderr: (data) => this.handleStderr(data),
-      onUserInput: (text) => this.addUserMessage(text),
-    };
-
     this.setStatus('starting');
     debug(
       'session-manager',
       `Resuming session ${resumeId ?? '(no id)'}${message ? ' with message' : ''}`,
     );
-    try {
-      // Pass message as initialPrompt so provider sends it via stdin on startup
-      await this.provider.start(providerCallbacks, message);
-      if (this.isResuming) {
-        this.emitInterruptedEntry();
-        this.setStatus('interrupted');
-      } else {
-        this.setStatus('done');
-      }
-    } catch (err) {
-      debug('session-manager', `provider.start() rejected on resume: ${err}`);
-      consola.error('Failed to resume session:', err);
-      if (this.isResuming) {
-        this.emitInterruptedEntry();
-        this.setStatus('interrupted');
-      } else {
-        this.setStatus('done');
-      }
-    }
+    // Pass message as initialPrompt so provider sends it via stdin on startup
+    await this.runProvider(message);
   }
 
   abort(): void {
@@ -198,6 +146,34 @@ export class SessionManager {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  private async runProvider(initialPrompt?: string): Promise<void> {
+    const providerCallbacks: ProviderCallbacks = {
+      onMessage: (entry) => this.handleEntry(entry),
+      onRawMessage: (raw) => this.handleRawMessage(raw),
+      onError: (error) => this.handleError(error),
+      onStderr: (data) => this.handleStderr(data),
+      onUserInput: (text) => this.addUserMessage(text),
+    };
+    try {
+      await this.provider.start(providerCallbacks, initialPrompt);
+      if (this.isResuming) {
+        this.emitInterruptedEntry();
+        this.setStatus('interrupted');
+      } else {
+        this.setStatus('done');
+      }
+    } catch (err) {
+      debug('session-manager', `provider.start() rejected: ${err}`);
+      consola.error('Session error:', err);
+      if (this.isResuming) {
+        this.emitInterruptedEntry();
+        this.setStatus('interrupted');
+      } else {
+        this.setStatus('done');
+      }
+    }
+  }
 
   private emitInterruptedEntry(): void {
     // Finalize any streaming entries (set isStreaming to false so UI stops showing spinner)

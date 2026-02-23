@@ -2,6 +2,7 @@
 // Transform SpaceMolt WS messages into shared GameState / GameEvent types
 // ---------------------------------------------------------------------------
 
+import { randomUUID } from 'crypto';
 import type { GameState, GameEvent } from '../state/types.js';
 import type {
   StateUpdatePayload,
@@ -143,6 +144,7 @@ export function transformEventMessage(type: string, payload: unknown): GameEvent
   const summary = summarize(type, payload);
   const label = getDisplayLabel(type, payload);
   const event: GameEvent = {
+    id: randomUUID(),
     ts: new Date().toISOString(),
     type,
     summary,

@@ -56,10 +56,14 @@ export function useWebSocket() {
 
     ws.onclose = () => {
       setConnected(false);
-      if (wsRef.current === ws) {
+      const isActive = wsRef.current === ws;
+      if (isActive) {
         wsRef.current = null;
       }
-      if (mountedRef.current) {
+      // Only reconnect if still mounted and this is the active connection.
+      // Checking isActive prevents a stale socket's close event from
+      // queuing a duplicate reconnect timer after a new connection is already open.
+      if (mountedRef.current && isActive) {
         reconnectTimer.current = setTimeout(connect, 2000);
       }
     };
@@ -165,11 +169,6 @@ export function useWebSocket() {
 
   const sendMessage = useCallback((text: string) => send({ type: 'send_message', text }), [send]);
 
-  const resume = useCallback(
-    (message?: string) => send({ type: 'resume', message: message || undefined }),
-    [send],
-  );
-
   const interrupt = useCallback(() => send({ type: 'interrupt' }), [send]);
 
   const abort = useCallback(() => send({ type: 'abort' }), [send]);
@@ -193,7 +192,6 @@ export function useWebSocket() {
     initialPrompt,
     startAgent,
     sendMessage,
-    resume,
     interrupt,
     abort,
     resetSession,

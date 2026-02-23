@@ -119,7 +119,7 @@ export function ClaudePanel({
   const sessionList = useSessionList();
   useEffect(() => {
     if (status === 'idle') sessionList.refresh();
-  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status, sessionList.refresh]);
 
   const handleShowHistory = useCallback(async () => {
     await sessionList.refresh();
