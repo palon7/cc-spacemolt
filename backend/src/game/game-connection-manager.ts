@@ -79,9 +79,12 @@ export class GameConnectionManager {
     this.stateFilePath = path.join(dir, 'travel-history.json');
   }
 
-  /** Called on session reset — stops writing until next session starts. */
+  /** Called on session reset — clears session data **/
   clearSessionDir(): void {
     this.stateFilePath = null;
+    this.currentSessionId = null;
+    this.previousSystem = null;
+    this.travelHistory = [];
   }
 
   /** Set broadcast callbacks (typically wired to WebSocket broadcast by the server). */
@@ -100,6 +103,13 @@ export class GameConnectionManager {
 
   get currentTravelHistory(): TravelHistoryEntry[] {
     return this.travelHistory;
+  }
+
+  setTravelHistory(history: TravelHistoryEntry[], sessionId?: string): void {
+    this.travelHistory = [...history];
+    if (sessionId) {
+      this.currentSessionId = sessionId;
+    }
   }
 
   get gameStatus(): GameStatusInfo {

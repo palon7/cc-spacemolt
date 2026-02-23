@@ -139,3 +139,34 @@ describe('GameConnectionManager.fetchInitialState', () => {
     expect(onStateUpdate.mock.calls[0][0].player.username).toBe('TestUser');
   });
 });
+
+describe('GameConnectionManager.setTravelHistory', () => {
+  let gcm: GameConnectionManager;
+
+  beforeEach(() => {
+    gcm = new GameConnectionManager('/tmp/test-workspace');
+  });
+
+  afterEach(() => {
+    gcm.cleanup();
+  });
+
+  it('should replace travel history with a defensive copy', () => {
+    const history = [{ from: 'a', to: 'b', ts: '2026-01-01T00:00:00.000Z' }];
+
+    gcm.setTravelHistory(history, 'session-1');
+    history.push({ from: 'b', to: 'c', ts: '2026-01-01T00:01:00.000Z' });
+
+    expect(gcm.currentTravelHistory).toEqual([
+      { from: 'a', to: 'b', ts: '2026-01-01T00:00:00.000Z' },
+    ]);
+  });
+
+  it('should clear in-memory history on clearSessionDir', () => {
+    gcm.setTravelHistory([{ from: 'a', to: 'b', ts: '2026-01-01T00:00:00.000Z' }], 'session-1');
+
+    gcm.clearSessionDir();
+
+    expect(gcm.currentTravelHistory).toEqual([]);
+  });
+});
