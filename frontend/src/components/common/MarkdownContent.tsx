@@ -7,10 +7,10 @@ const components: Components = {
     <h1 className="text-base font-bold text-zinc-100 mt-3 mb-1 first:mt-0">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-[13px] font-bold text-zinc-200 mt-2.5 mb-1 first:mt-0">{children}</h2>
+    <h2 className="text-base font-bold text-zinc-200 mt-2.5 mb-1 first:mt-0">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-[12px] font-semibold text-zinc-300 mt-2 mb-0.5 first:mt-0">{children}</h3>
+    <h3 className="text-sm font-semibold text-zinc-300 mt-2 mb-0.5 first:mt-0">{children}</h3>
   ),
   p: ({ children }) => <p className="mb-1.5 last:mb-0 leading-relaxed">{children}</p>,
   ul: ({ children }) => (
@@ -25,7 +25,7 @@ const components: Components = {
     if (isBlock) {
       return (
         <code
-          className="block bg-zinc-900 border border-zinc-700/50 rounded px-3 py-2 text-[11px] font-mono text-zinc-200 overflow-x-auto whitespace-pre"
+          className="block bg-zinc-900 border border-zinc-700/50 rounded px-3 py-2 text-sm font-mono text-zinc-200 overflow-x-auto whitespace-pre"
           {...props}
         >
           {children}
@@ -34,7 +34,7 @@ const components: Components = {
     }
     return (
       <code
-        className="bg-zinc-800 border border-zinc-700/40 rounded px-1 py-0.5 text-[11px] font-mono text-amber-300"
+        className="bg-zinc-800 border border-zinc-700/40 rounded px-1 py-0.5 text-sm font-mono text-amber-300"
         {...props}
       >
         {children}
@@ -62,7 +62,7 @@ const components: Components = {
   hr: () => <hr className="border-zinc-700 my-2" />,
   table: ({ children }) => (
     <div className="overflow-x-auto mb-1.5">
-      <table className="text-[11px] border-collapse w-full">{children}</table>
+      <table className="text-sm border-collapse w-full">{children}</table>
     </div>
   ),
   thead: ({ children }) => <thead className="bg-zinc-800/50">{children}</thead>,

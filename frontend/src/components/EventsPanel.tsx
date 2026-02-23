@@ -61,8 +61,8 @@ export function EventsPanel({ events }: EventsPanelProps) {
             className="w-1.5 h-1.5 rounded-full bg-cyan-400"
             style={{ boxShadow: '0 0 6px rgba(34,211,238,0.4)' }}
           />
-          <h2 className="text-xs font-semibold text-zinc-300 tracking-widest uppercase">Events</h2>
-          <span className="font-mono text-[10px] text-zinc-600">{filtered.length}</span>
+          <h2 className="text-sm font-semibold text-zinc-300 tracking-widest uppercase">Events</h2>
+          <span className="font-mono text-xs text-zinc-600">{filtered.length}</span>
         </div>
       </div>
       <div className="flex items-center gap-1 px-3 py-1.5 border-b border-zinc-800/50 overflow-x-auto shrink-0 custom-scrollbar">
@@ -70,7 +70,7 @@ export function EventsPanel({ events }: EventsPanelProps) {
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`text-[10px] px-2 py-0.5 rounded border whitespace-nowrap transition-colors ${
+            className={`text-xs px-2 py-0.5 rounded border whitespace-nowrap transition-colors ${
               filter === f.key
                 ? 'bg-zinc-700 text-zinc-200 border-zinc-600'
                 : 'text-zinc-500 border-zinc-800 hover:bg-zinc-800 hover:text-zinc-400'
@@ -86,24 +86,24 @@ export function EventsPanel({ events }: EventsPanelProps) {
             key={`${e.ts}-${i}`}
             className="flex items-start gap-1.5 py-1.5 px-1.5 rounded hover:bg-zinc-800/40 transition-colors"
           >
-            <span className="font-mono text-[10px] text-zinc-700 mt-0.5 shrink-0 hidden sm:inline">
+            <span className="font-mono text-xs text-zinc-700 mt-0.5 shrink-0 hidden sm:inline">
               {e.ts.slice(11, 19)}
             </span>
-            <span className="font-mono text-[10px] text-zinc-700 mt-0.5 shrink-0 sm:hidden">
+            <span className="font-mono text-xs text-zinc-700 mt-0.5 shrink-0 sm:hidden">
               {e.ts.slice(11, 16)}
             </span>
             <span
-              className={`text-[9px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${
+              className={`text-2xs px-1.5 py-0.5 rounded border font-medium shrink-0 ${
                 EVT_BADGE[e.type] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20'
               }`}
             >
               {EVT_LABEL[e.type] || e.type}
             </span>
-            <span className="text-[11px] text-zinc-400 leading-relaxed break-all">{e.summary}</span>
+            <span className="text-sm text-zinc-400 leading-relaxed break-all">{e.summary}</span>
           </div>
         ))}
         {!filtered.length && (
-          <div className="text-xs text-zinc-600 italic p-4 text-center">No events</div>
+          <div className="text-sm text-zinc-600 italic p-4 text-center">No events</div>
         )}
       </div>
     </div>

@@ -755,26 +755,24 @@ export function SpacemoltToolBlock({
         )}
 
         {/* GAME badge */}
-        <span
-          className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded border font-mono ${badgeClass}`}
-        >
+        <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded border font-mono ${badgeClass}`}>
           GAME
         </span>
 
         {/* Emoji + action */}
-        <span className="text-[10px] font-mono text-zinc-400 truncate min-w-0">
+        <span className="text-xs font-mono text-zinc-400 truncate min-w-0">
           {emoji} {action}
         </span>
 
         {/* Timestamp */}
-        <span className="text-[10px] text-zinc-700 font-mono ml-auto shrink-0">
+        <span className="text-xs text-zinc-700 font-mono ml-auto shrink-0">
           {entry.timestamp.slice(11, 19)}
         </span>
       </div>
 
       {/* Collapsed summary */}
       {result && !expanded && (
-        <div className="ml-4 mt-0.5 text-[10px] font-mono">
+        <div className="ml-4 mt-0.5 text-xs font-mono">
           {isError ? (
             <div className="text-red-400/60 truncate">{result.content.trim().slice(0, 80)}</div>
           ) : summary ? (
@@ -796,8 +794,8 @@ export function SpacemoltToolBlock({
           {/* Summary section (purple) */}
           {summary && (
             <div className="px-3 py-2 rounded-md border bg-purple-500/5 border-purple-500/10">
-              <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Summary</div>
-              <div className="text-[11px] font-mono space-y-0.5">
+              <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Summary</div>
+              <div className="text-sm font-mono space-y-0.5">
                 <div className="text-zinc-300">{summary.label}</div>
                 {summary.lines.map((line, i) => (
                   <div key={i} className="text-zinc-500">
@@ -818,9 +816,9 @@ export function SpacemoltToolBlock({
                   : 'bg-purple-500/5 border-purple-500/10'
             }`}
           >
-            <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Input</div>
+            <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Input</div>
             <pre
-              className={`text-[11px] font-mono whitespace-pre-wrap break-words ${
+              className={`text-sm font-mono whitespace-pre-wrap break-words ${
                 isPending ? 'text-amber-200/70' : isError ? 'text-red-200/60' : 'text-purple-200/60'
               }`}
             >
@@ -835,11 +833,11 @@ export function SpacemoltToolBlock({
                 isError ? 'bg-red-500/5 border-red-500/10' : 'bg-purple-500/5 border-purple-500/10'
               }`}
             >
-              <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">
+              <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">
                 {isError ? 'Error' : 'Result'}
               </div>
               <pre
-                className={`text-[11px] font-mono whitespace-pre-wrap break-words ${
+                className={`text-sm font-mono whitespace-pre-wrap break-words ${
                   isError ? 'text-red-200/60' : 'text-purple-200/60'
                 }`}
               >

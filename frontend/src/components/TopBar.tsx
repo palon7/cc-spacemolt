@@ -47,12 +47,12 @@ export function TopBar({ connected, gameStatus, gameState }: TopBarProps) {
     <div className="flex items-center justify-between px-3 sm:px-5 py-2 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-sm shrink-0">
       <div className="flex items-center gap-2 sm:gap-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-semibold tracking-widest text-zinc-400 uppercase">
+          <span className="text-sm font-semibold tracking-widest text-zinc-400 uppercase">
             cc-spacemolt
           </span>
         </div>
         <span className="text-zinc-800 hidden sm:inline">|</span>
-        <span className="text-[10px] text-zinc-600 font-mono hidden sm:inline">v0.2.0</span>
+        <span className="text-xs text-zinc-600 font-mono hidden sm:inline">v0.2.0</span>
       </div>
       <div className="flex items-center gap-2 sm:gap-4">
         <div
@@ -63,22 +63,22 @@ export function TopBar({ connected, gameStatus, gameState }: TopBarProps) {
             className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400' : 'bg-red-400'}`}
           />
           <span
-            className={`text-[10px] tracking-wider uppercase hidden sm:inline ${connected ? 'text-emerald-500' : 'text-red-500'}`}
+            className={`text-xs tracking-wider uppercase hidden sm:inline ${connected ? 'text-emerald-500' : 'text-red-500'}`}
           >
             WS
           </span>
         </div>
         <div className="flex items-center gap-1.5" title={gameTooltip}>
           <div className={`w-1.5 h-1.5 rounded-full ${gi.dot}`} />
-          <span className={`text-[10px] tracking-wider uppercase hidden sm:inline ${gi.text}`}>
+          <span className={`text-xs tracking-wider uppercase hidden sm:inline ${gi.text}`}>
             Game
           </span>
         </div>
-        <span className="font-mono text-[11px] text-zinc-500">
+        <span className="font-mono text-sm text-zinc-500">
           {time.toLocaleTimeString('en-US', { hour12: false })}
         </span>
         {gameState && (
-          <span className="font-mono text-[10px] text-zinc-600 hidden sm:inline">
+          <span className="font-mono text-xs text-zinc-600 hidden sm:inline">
             T{gameState.tick.toLocaleString()}
           </span>
         )}

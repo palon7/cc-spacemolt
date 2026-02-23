@@ -338,7 +338,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
   return (
     <div ref={containerCallbackRef} className="w-full h-full relative overflow-hidden">
       {!mapData ? (
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] text-zinc-600">
+        <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-600">
           Loading map...
         </div>
       ) : null}
@@ -364,7 +364,7 @@ export function StarMap({ gameState, travelHistory }: StarMapProps) {
       {!tracking && (
         <button
           onClick={handleRecenter}
-          className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[9px] rounded bg-zinc-800/80 border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/80 transition-colors"
+          className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-2xs rounded bg-zinc-800/80 border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/80 transition-colors"
           title="Center on current system"
         >
           Re-center

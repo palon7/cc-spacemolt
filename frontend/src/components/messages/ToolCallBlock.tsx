@@ -86,27 +86,25 @@ export function ToolCallBlock({
 
         {/* Tool name badge */}
         <span
-          className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded border font-mono ${colorClass.badge}`}
+          className={`shrink-0 text-xs px-1.5 py-0.5 rounded border font-mono ${colorClass.badge}`}
         >
           {entry.toolName}
         </span>
 
         {/* Primary param */}
         {primaryParam && (
-          <span className="text-[10px] font-mono text-zinc-500 truncate min-w-0">
-            {primaryParam}
-          </span>
+          <span className="text-xs font-mono text-zinc-500 truncate min-w-0">{primaryParam}</span>
         )}
 
         {/* Timestamp */}
-        <span className="text-[10px] text-zinc-700 font-mono ml-auto shrink-0">
+        <span className="text-xs text-zinc-700 font-mono ml-auto shrink-0">
           {entry.timestamp.slice(11, 19)}
         </span>
       </div>
 
       {/* Result summary — shown below header when collapsed */}
       {result && !expanded && (
-        <div className={`ml-4 mt-0.5 text-[10px] font-mono truncate ${colorClass.summary}`}>
+        <div className={`ml-4 mt-0.5 text-xs font-mono truncate ${colorClass.summary}`}>
           {getResultSummary(result.content)}
         </div>
       )}
@@ -124,9 +122,9 @@ export function ToolCallBlock({
                   : 'bg-emerald-500/5 border-emerald-500/10'
             }`}
           >
-            <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Input</div>
+            <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">Input</div>
             <pre
-              className={`text-[11px] font-mono whitespace-pre-wrap break-words ${
+              className={`text-sm font-mono whitespace-pre-wrap break-words ${
                 isPending
                   ? 'text-amber-200/70'
                   : isError
@@ -143,11 +141,11 @@ export function ToolCallBlock({
             <div
               className={`px-3 py-2 rounded-md border overflow-x-auto ${isError ? 'bg-red-500/5 border-red-500/10' : 'bg-emerald-500/5 border-emerald-500/10'}`}
             >
-              <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">
+              <div className="text-2xs uppercase tracking-widest text-zinc-600 mb-1">
                 {isError ? 'Error' : 'Result'}
               </div>
               <pre
-                className={`text-[11px] font-mono whitespace-pre-wrap break-words ${isError ? 'text-red-200/60' : 'text-emerald-200/60'}`}
+                className={`text-sm font-mono whitespace-pre-wrap break-words ${isError ? 'text-red-200/60' : 'text-emerald-200/60'}`}
               >
                 {formatContent(result.content)}
               </pre>

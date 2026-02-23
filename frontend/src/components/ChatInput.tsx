@@ -47,7 +47,7 @@ export function ChatInput({
           onChange={(e) => setInstructions(e.target.value)}
           placeholder={initialPrompt || 'Enter instructions...'}
           rows={2}
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y min-h-[2.5rem] text-sm"
+          className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y min-h-[2.5rem] text-base"
         />
         <button
           onClick={() => onStart(instructions.trim() || undefined)}

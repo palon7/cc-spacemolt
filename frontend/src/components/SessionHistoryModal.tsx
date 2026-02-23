@@ -34,7 +34,7 @@ export function SessionHistoryModal({
   return (
     <Modal onClose={onClose}>
       <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800 shrink-0">
-        <h3 className="text-sm font-semibold text-zinc-100">Session History</h3>
+        <h3 className="text-base font-semibold text-zinc-100">Session History</h3>
         <button
           onClick={onClose}
           className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
@@ -45,13 +45,13 @@ export function SessionHistoryModal({
 
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {loading ? (
-          <div className="flex items-center justify-center py-12 text-xs text-zinc-500">
+          <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
             Loading sessions...
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center py-12 text-xs text-red-400">{error}</div>
+          <div className="flex items-center justify-center py-12 text-sm text-red-400">{error}</div>
         ) : sessions.length === 0 ? (
-          <div className="flex items-center justify-center py-12 text-xs text-zinc-500">
+          <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
             No sessions found
           </div>
         ) : (

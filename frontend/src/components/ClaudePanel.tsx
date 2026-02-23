@@ -25,7 +25,7 @@ function StatusBadge({
   return (
     <div className="flex items-center gap-1.5">
       <div className={`w-1 h-1 rounded-full ${dot} ${pulse ? 'animate-pulse' : ''}`} />
-      <span className={`text-[10px] ${text} tracking-wider`}>{label}</span>
+      <span className={`text-xs ${text} tracking-wider`}>{label}</span>
     </div>
   );
 }
@@ -142,7 +142,7 @@ export function ClaudePanel({
             }`}
             style={{ boxShadow: isRunning ? '0 0 6px rgba(251,191,36,0.4)' : undefined }}
           />
-          <h2 className="text-xs font-semibold text-zinc-300 tracking-widest uppercase">
+          <h2 className="text-sm font-semibold text-zinc-300 tracking-widest uppercase">
             Mission Log
           </h2>
         </div>
@@ -159,12 +159,12 @@ export function ClaudePanel({
             <IconClock />
           </button>
           {sessionMeta && (
-            <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-600">
+            <span className="hidden sm:inline text-xs px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-600">
               {sessionMeta.model}
             </span>
           )}
           {sessionMeta && (
-            <span className="hidden sm:inline text-[10px] font-mono text-blue-400">
+            <span className="hidden sm:inline text-xs font-mono text-blue-400">
               ${sessionMeta.totalCostUsd.toFixed(4)}
             </span>
           )}
@@ -180,7 +180,7 @@ export function ClaudePanel({
         >
           {status === 'idle' && sessionList.sessions.length > 0 && (
             <div className="flex flex-col items-center justify-center py-8 gap-4">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Recent Sessions</p>
+              <p className="text-sm text-zinc-500 uppercase tracking-wider">Recent Sessions</p>
               <div className="w-full max-w-md space-y-1.5">
                 {sessionList.sessions.slice(0, 3).map((session) => (
                   <SessionCard
@@ -193,7 +193,7 @@ export function ClaudePanel({
               <button
                 type="button"
                 onClick={handleShowHistory}
-                className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
               >
                 Show all sessions...
               </button>
@@ -224,9 +224,7 @@ export function ClaudePanel({
                   />
                 </svg>
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-600">
-                Starting...
-              </span>
+              <span className="text-xs uppercase tracking-wider text-zinc-600">Starting...</span>
             </div>
           )}
         </div>
@@ -239,11 +237,11 @@ export function ClaudePanel({
           >
             <IconArrowDown />
             {newCount > 0 ? (
-              <span className="text-[11px] font-medium text-amber-400 tabular-nums">
+              <span className="text-sm font-medium text-amber-400 tabular-nums">
                 {newCount} new
               </span>
             ) : (
-              <span className="text-[11px] font-medium text-zinc-400">Latest</span>
+              <span className="text-sm font-medium text-zinc-400">Latest</span>
             )}
           </button>
         )}
@@ -257,7 +255,7 @@ export function ClaudePanel({
             <button
               onClick={handleReset}
               disabled={!connected}
-              className="w-full py-2 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-medium tracking-wide"
+              className="w-full py-2 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium tracking-wide"
             >
               New Session
             </button>
@@ -270,12 +268,12 @@ export function ClaudePanel({
               onChange={(e) => setInstructions(e.target.value)}
               placeholder={initialPrompt || 'Enter instructions...'}
               rows={2}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-y min-h-[2.5rem]"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-y min-h-[2.5rem]"
             />
             <button
               onClick={() => startAgent(instructions.trim() || undefined)}
               disabled={!connected}
-              className="w-full py-2 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-medium tracking-wide"
+              className="w-full py-2 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm font-medium tracking-wide"
             >
               Start Agent
             </button>
@@ -291,7 +289,7 @@ export function ClaudePanel({
                 status === 'done' ? 'Send a follow-up message...' : 'Send a message to resume...'
               }
               disabled={!connected}
-              className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors disabled:opacity-50"
+              className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors disabled:opacity-50"
             />
             <div className="flex items-center gap-1.5">
               <button
@@ -320,7 +318,7 @@ export function ClaudePanel({
               onKeyDown={handleKeyDown}
               placeholder="Send a message to Claude..."
               disabled={!connected}
-              className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors disabled:opacity-50"
+              className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors disabled:opacity-50"
             />
             <div className="flex items-center gap-1.5">
               <button
