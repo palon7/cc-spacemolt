@@ -90,17 +90,17 @@ export function EventsPanel({ events }: EventsPanelProps) {
               {e.ts.slice(11, 16)}
             </span>
             <span
-              className={`text-2xs px-1.5 py-0.5 rounded border font-medium shrink-0 ${
+              className={`text-xs px-1.5 py-0.5 rounded border font-medium shrink-0 ${
                 EVT_BADGE[e.type] || 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20'
               }`}
             >
               {EVT_LABEL[e.type] || e.type}
             </span>
-            <span className="text-sm text-zinc-400 leading-relaxed break-all">{e.summary}</span>
+            <span className="text-xs text-zinc-400 leading-relaxed break-all">{e.summary}</span>
           </div>
         ))}
         {!filtered.length && (
-          <div className="text-sm text-zinc-600 italic p-4 text-center">No events</div>
+          <div className="text-xs text-zinc-600 italic p-4 text-center">No events</div>
         )}
       </div>
     </div>
