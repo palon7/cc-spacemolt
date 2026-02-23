@@ -29,9 +29,8 @@ export function useWebSocket() {
   const mountedRef = useRef(false);
 
   const connect = useCallback(() => {
-    // Close any existing connection before creating a new one
     if (wsRef.current) {
-      wsRef.current.onclose = null; // Prevent onclose from firing reconnect
+      wsRef.current.onclose = null; // prevent reconnect on manual close
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -60,7 +59,6 @@ export function useWebSocket() {
       if (wsRef.current === ws) {
         wsRef.current = null;
       }
-      // Only reconnect if still mounted and this is the active connection
       if (mountedRef.current) {
         reconnectTimer.current = setTimeout(connect, 2000);
       }
@@ -75,21 +73,19 @@ export function useWebSocket() {
       }
 
       switch (msg.type) {
-        case 'entry':
+        case 'entry': {
+          const entry = msg.entry;
           setEntries((prev) => {
-            const entry = msg.entry;
-            // Update existing entry by ID (streaming deltas or finalization)
-            if (entry.kind === 'text' || entry.kind === 'thinking') {
-              const existingIndex = prev.findIndex((e) => e.id === entry.id);
-              if (existingIndex >= 0) {
-                const next = [...prev];
-                next[existingIndex] = entry;
-                return next;
-              }
+            const existingIndex = prev.findIndex((e) => e.id === entry.id);
+            if (existingIndex !== -1) {
+              const next = [...prev];
+              next[existingIndex] = entry;
+              return next;
             }
             return [...prev, entry];
           });
           break;
+        }
         case 'clear_streaming':
           setEntries((prev) =>
             prev.filter((e) => {
