@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { ParsedEntry, SessionMeta, AgentStatus, ToolResultEntry } from '@cc-spacemolt/shared';
 import { useStickToBottom } from '../hooks/useStickToBottom';
 import { useSessionList } from '../hooks/useSessionList';
-import { LuSend, LuSquare, LuRotateCcw, LuArrowDown, LuClock } from 'react-icons/lu';
+import { LuSend, LuSquare, LuArrowDown, LuClock, LuPlus } from 'react-icons/lu';
 import { EntryRenderer } from './messages/EntryRenderer';
 import { SessionHistoryModal } from './SessionHistoryModal';
 import { SessionCard } from './common/SessionCard';
@@ -149,6 +149,23 @@ export function ClaudePanel({
             {isCompacting && <StatusBadge color="purple" label="Compacting" pulse />}
             {isRunning && !isCompacting && <StatusBadge color="amber" label="Running" pulse />}
             {status === 'interrupted' && <StatusBadge color="yellow" label="Stopped" />}
+            {sessionMeta && (
+              <span className="hidden sm:inline text-xs px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-600">
+                {sessionMeta.model}
+              </span>
+            )}
+            {sessionMeta &&
+              sessionMeta.contextWindow > 0 &&
+              (() => {
+                const pct = (sessionMeta.inputTokens / sessionMeta.contextWindow) * 100;
+                const colorClass =
+                  pct >= 95 ? 'text-red-400' : pct >= 80 ? 'text-yellow-400' : 'text-zinc-500';
+                return (
+                  <span className={`hidden sm:inline text-xs font-mono ${colorClass}`}>
+                    {pct.toFixed(1)}%
+                  </span>
+                );
+              })()}
             <PanelHeaderButton
               onClick={handleShowHistory}
               disabled={isRunning}
@@ -156,15 +173,10 @@ export function ClaudePanel({
             >
               <LuClock size={14} />
             </PanelHeaderButton>
-            {sessionMeta && (
-              <span className="hidden sm:inline text-xs px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 font-mono text-zinc-600">
-                {sessionMeta.model}
-              </span>
-            )}
-            {sessionMeta && (
-              <span className="hidden sm:inline text-xs font-mono text-blue-400">
-                ${sessionMeta.totalCostUsd.toFixed(4)}
-              </span>
+            {(status === 'error' || status === 'interrupted' || status === 'done') && (
+              <PanelHeaderButton onClick={handleReset} disabled={!connected} title="New Session">
+                <LuPlus size={14} />
+              </PanelHeaderButton>
             )}
           </>
         }
@@ -247,75 +259,62 @@ export function ClaudePanel({
       </div>
 
       {/* Input area */}
-      <div className="shrink-0 px-3 sm:px-4 py-2.5 border-t border-zinc-800 bg-zinc-900/80">
-        {status === 'error' ? (
-          /* Error — New Session only */
-          <ActionButton onClick={handleReset} disabled={!connected}>
-            New Session
-          </ActionButton>
-        ) : status === 'idle' ? (
-          /* No session — Start Agent */
-          <div className="flex flex-col gap-2">
-            <PanelTextarea
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              placeholder={initialPrompt || 'Enter instructions...'}
-              rows={2}
-            />
-            <ActionButton
-              onClick={() => startAgent(instructions.trim() || undefined)}
-              disabled={!connected}
-            >
-              Start Agent
-            </ActionButton>
-          </div>
-        ) : (status === 'interrupted' || status === 'done') && supportsInput ? (
-          /* Interrupted / Done — Send message to resume, or start new session */
-          <div className="flex items-center gap-2">
-            <PanelInput
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                status === 'done' ? 'Send a follow-up message...' : 'Send a message to resume...'
-              }
-              disabled={!connected}
-            />
-            <div className="flex items-center gap-1.5">
-              <IconButton
-                color="emerald"
-                onClick={handleReset}
+      {status !== 'error' && (
+        <div className="shrink-0 px-3 sm:px-4 py-2.5 border-t border-zinc-800 bg-zinc-900/80">
+          {status === 'idle' ? (
+            /* No session — Start Agent */
+            <div className="flex flex-col gap-2">
+              <PanelTextarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder={initialPrompt || 'Enter instructions...'}
+                rows={2}
+              />
+              <ActionButton
+                onClick={() => startAgent(instructions.trim() || undefined)}
                 disabled={!connected}
-                title="New Session"
               >
-                <LuRotateCcw size={14} />
-              </IconButton>
+                Start Agent
+              </ActionButton>
+            </div>
+          ) : (status === 'interrupted' || status === 'done') && supportsInput ? (
+            /* Interrupted / Done — Send message to resume, or start new session */
+            <div className="flex items-center gap-2">
+              <PanelInput
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  status === 'done' ? 'Send a follow-up message...' : 'Send a message to resume...'
+                }
+                disabled={!connected}
+              />
               <IconButton color="amber" onClick={handleSend} disabled={!input.trim()}>
                 <LuSend size={16} />
               </IconButton>
             </div>
-          </div>
-        ) : isRunning && supportsInput ? (
-          /* Running — Stop + chat input */
-          <div className="flex items-center gap-2">
-            <PanelInput
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Send a message to Claude..."
-              disabled={!connected}
-            />
-            <div className="flex items-center gap-1.5">
-              <IconButton color="red" onClick={() => interrupt()} title="Stop">
-                <LuSquare size={14} fill="currentColor" stroke="none" />
-              </IconButton>
-              <IconButton color="amber" onClick={handleSend} disabled={!input.trim()}>
-                <LuSend size={16} />
-              </IconButton>
+          ) : isRunning && supportsInput ? (
+            /* Running — Stop + chat input */
+            <div className="flex items-center gap-2">
+              <PanelInput
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Send a message to Claude..."
+                disabled={!connected}
+              />
+              <div className="flex items-center gap-1.5">
+                <IconButton color="red" onClick={() => interrupt()} title="Stop">
+                  <LuSquare size={14} fill="currentColor" stroke="none" />
+                </IconButton>
+                <IconButton color="amber" onClick={handleSend} disabled={!input.trim()}>
+                  <LuSend size={16} />
+                </IconButton>
+              </div>
             </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      )}
 
       {showHistory && (
         <SessionHistoryModal

@@ -296,12 +296,25 @@ export class SessionManager {
       this.clearStreamingEntries();
 
       const usage = (
-        msg.message as { usage?: { input_tokens?: number; output_tokens?: number } } | undefined
+        msg.message as
+          | {
+              usage?: {
+                input_tokens?: number;
+                cache_creation_input_tokens?: number;
+                cache_read_input_tokens?: number;
+                output_tokens?: number;
+              };
+            }
+          | undefined
       )?.usage;
       if (usage && this.sessionMeta) {
+        const totalInputTokens =
+          (usage.input_tokens ?? 0) +
+          (usage.cache_creation_input_tokens ?? 0) +
+          (usage.cache_read_input_tokens ?? 0);
         this.sessionMeta = {
           ...this.sessionMeta,
-          ...(usage.input_tokens != null ? { inputTokens: usage.input_tokens } : {}),
+          inputTokens: totalInputTokens,
           ...(usage.output_tokens != null ? { outputTokens: usage.output_tokens } : {}),
         };
         this.callbacks?.onMeta(this.sessionMeta);
