@@ -22,6 +22,7 @@ Also connects to the SpaceMolt game server via WebSocket to display game state a
 - **Claude Code CLI** — launched as a subprocess with `--output-format stream-json --input-format stream-json`
 - **SpaceMolt API**: REST API (static data) + WebSocket (real-time game state)
 - **Testing**: Vitest
+- **Build**: esbuild — bundles backend (including `@cc-spacemolt/shared`) into a single ESM file; `createRequire` banner for CJS compatibility
 
 ## Architecture
 
