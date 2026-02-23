@@ -79,7 +79,7 @@ export class GameConnectionManager {
     this.stateFilePath = path.join(dir, 'travel-history.json');
   }
 
-  /** Called on session reset — stops writing until next session starts. */
+  /** Called on session reset — clears session data **/
   clearSessionDir(): void {
     this.stateFilePath = null;
     this.currentSessionId = null;

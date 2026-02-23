@@ -103,6 +103,7 @@ export function useWebSocket() {
           setEntries([]);
           setSessionMeta(null);
           setStatus('idle');
+          setTravelHistory([]);
           break;
         case 'config':
           setInitialPrompt(msg.initialPrompt);

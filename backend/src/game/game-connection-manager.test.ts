@@ -141,8 +141,17 @@ describe('GameConnectionManager.fetchInitialState', () => {
 });
 
 describe('GameConnectionManager.setTravelHistory', () => {
+  let gcm: GameConnectionManager;
+
+  beforeEach(() => {
+    gcm = new GameConnectionManager('/tmp/test-workspace');
+  });
+
+  afterEach(() => {
+    gcm.cleanup();
+  });
+
   it('should replace travel history with a defensive copy', () => {
-    const gcm = new GameConnectionManager('/tmp/test-workspace');
     const history = [{ from: 'a', to: 'b', ts: '2026-01-01T00:00:00.000Z' }];
 
     gcm.setTravelHistory(history, 'session-1');
@@ -151,18 +160,13 @@ describe('GameConnectionManager.setTravelHistory', () => {
     expect(gcm.currentTravelHistory).toEqual([
       { from: 'a', to: 'b', ts: '2026-01-01T00:00:00.000Z' },
     ]);
-
-    gcm.cleanup();
   });
 
   it('should clear in-memory history on clearSessionDir', () => {
-    const gcm = new GameConnectionManager('/tmp/test-workspace');
     gcm.setTravelHistory([{ from: 'a', to: 'b', ts: '2026-01-01T00:00:00.000Z' }], 'session-1');
 
     gcm.clearSessionDir();
 
     expect(gcm.currentTravelHistory).toEqual([]);
-
-    gcm.cleanup();
   });
 });
