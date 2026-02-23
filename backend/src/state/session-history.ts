@@ -76,6 +76,31 @@ export async function replaySession(
       continue;
     }
 
+    // Restore context usage from assistant message usage fields
+    if (msg.type === 'assistant' && meta) {
+      const usage = (
+        msg.message as
+          | {
+              usage?: {
+                input_tokens?: number;
+                cache_creation_input_tokens?: number;
+                cache_read_input_tokens?: number;
+                output_tokens?: number;
+              };
+            }
+          | undefined
+      )?.usage;
+      if (usage) {
+        meta.inputTokens =
+          (usage.input_tokens ?? 0) +
+          (usage.cache_creation_input_tokens ?? 0) +
+          (usage.cache_read_input_tokens ?? 0);
+        if (usage.output_tokens != null) {
+          meta.outputTokens = usage.output_tokens;
+        }
+      }
+    }
+
     const parsed = parse(msg);
     for (const entry of parsed) {
       entries.push(entry);
