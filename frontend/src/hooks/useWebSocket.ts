@@ -29,9 +29,8 @@ export function useWebSocket() {
   const mountedRef = useRef(false);
 
   const connect = useCallback(() => {
-    // Close any existing connection before creating a new one
     if (wsRef.current) {
-      wsRef.current.onclose = null; // Prevent onclose from firing reconnect
+      wsRef.current.onclose = null; // prevent reconnect on manual close
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -60,7 +59,6 @@ export function useWebSocket() {
       if (wsRef.current === ws) {
         wsRef.current = null;
       }
-      // Only reconnect if still mounted and this is the active connection
       if (mountedRef.current) {
         reconnectTimer.current = setTimeout(connect, 2000);
       }
@@ -80,12 +78,10 @@ export function useWebSocket() {
           setEntries((prev) => {
             const existingIndex = prev.findIndex((e) => e.id === entry.id);
             if (existingIndex !== -1) {
-              // Update existing entry (streaming delta, finalization, or reconnect replay)
               const next = [...prev];
               next[existingIndex] = entry;
               return next;
             }
-            // New entry — append
             return [...prev, entry];
           });
           break;
