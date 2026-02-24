@@ -85,22 +85,29 @@ Command-line arguments override values in the config file.
 
 Configure behavior via `~/.cc-spacemolt/config.json` (or `data/config.json` during development).
 
-| Field                            | Description                                                 |
-| -------------------------------- | ----------------------------------------------------------- |
-| `initialPrompt`                  | Default initial prompt sent to the agent at session start   |
-| `systemPromptAppend`             | Additional system prompt appended when running Claude Code  |
-| `mcpServers`                     | MCP server configuration (`stdio` / `http` / `sse`)         |
-| `permissions.autoAllowTools`     | List of built-in tool names to auto-approve                 |
-| `permissions.allowedMcpPrefixes` | MCP tool prefixes to auto-approve                           |
-| `permissions.allowedWebDomains`  | Domains to auto-approve for WebFetch / WebSearch            |
-| `maxLogEntries`                  | Maximum number of log entries to keep in memory             |
-| `model`                          | Claude model to use                                         |
-| `workspacePath`                  | Working directory for Claude CLI (uses default if not set)  |
-| `language`                       | Language for agent responses (e.g., `"Japanese"`)           |
-| `uiLanguage`                     | Language for the Web UI setup wizard (`"en"` or `"ja"`)     |
-| `dangerouslySkipPermissions`     | Bypass all permission checks (use with caution)             |
-| `claudeArgs`                     | Additional CLI arguments appended to the Claude CLI command |
-| `claudeEnv`                      | Environment variables applied when launching Claude CLI     |
+```jsonc
+{
+  "initialPrompt": "...", // Default initial prompt sent to the agent at session start
+  "systemPromptAppend": "...", // Additional system prompt appended when running Claude Code
+  "mcpServers": {
+    // MCP server configuration (stdio / http / sse)
+    "my-server": { "type": "http", "url": "https://example.com/mcp" },
+  },
+  "permissions": {
+    "autoAllowTools": [], // Built-in tool names to auto-approve
+    "allowedMcpPrefixes": ["mcp__spacemolt__"], // MCP tool prefixes to auto-approve
+    "allowedWebDomains": ["example.com"], // Domains to auto-approve for WebFetch / WebSearch
+  },
+  "maxLogEntries": 1000, // Maximum number of log entries to keep in memory
+  "model": "sonnet", // Claude model to use
+  "workspacePath": "/path/to/workspace", // Working directory for Claude CLI
+  "language": "English", // Language for agent responses
+  "uiLanguage": "en", // Language for the Web UI setup wizard ("en" or "ja")
+  "dangerouslySkipPermissions": false, // Bypass all permission checks (use with caution)
+  "claudeArgs": ["--verbose"], // Additional CLI arguments appended to the Claude CLI command
+  "claudeEnv": { "MY_VAR": "value" }, // Environment variables applied when launching Claude CLI
+}
+```
 
 ## Development
 
