@@ -1,7 +1,8 @@
 name: Release to npm
-
 on:
   workflow_dispatch:
+    branches:
+      - main
     inputs:
       dry_run:
         description: 'Dry-run (no publish/tag/release)'
