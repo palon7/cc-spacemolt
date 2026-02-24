@@ -1,6 +1,11 @@
 import consola from 'consola';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
+import type { CommandLineOptions } from './utils/command-line.js';
+
+// Default base directory
+export const defaultConfigDir = path.join(os.homedir(), '.cc-spacemolt');
 
 export interface McpServerConfig {
   type: 'stdio' | 'http' | 'sse';
@@ -110,14 +115,6 @@ export function loadConfig(configFile: string): AppConfig {
   }
 }
 
-export interface CliOverrides {
-  workspace?: string;
-  logDir?: string;
-  dangerouslySkipPermissions?: boolean;
-  claudeEnv?: Record<string, string>;
-  claudeArgs?: string[];
-}
-
 export interface ResolvedConfig {
   config: AppConfig;
   workspacePath: string;
@@ -127,13 +124,14 @@ export interface ResolvedConfig {
 
 export function applyCliOverrides(
   config: AppConfig,
-  cliOpts: CliOverrides,
-  defaultConfigDir: string,
+  cliOpts: CommandLineOptions,
+  _configDir?: string,
 ): ResolvedConfig {
+  const configDir = _configDir ? _configDir : defaultConfigDir;
   const workspacePath =
-    cliOpts.workspace || config.workspacePath || path.join(defaultConfigDir, 'workspace');
+    cliOpts.workspace || config.workspacePath || path.join(configDir, 'workspace');
 
-  const logDir = cliOpts.logDir ?? path.join(defaultConfigDir, 'logs');
+  const logDir = cliOpts.logDir ?? path.join(configDir, 'logs');
 
   const bypassPermissions =
     cliOpts.dangerouslySkipPermissions === true || config.dangerouslySkipPermissions === true;
