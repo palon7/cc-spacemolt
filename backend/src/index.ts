@@ -6,7 +6,7 @@ import consola from 'consola';
 import ora from 'ora';
 import updateNotifier from 'update-notifier';
 import packageJson from '../../package.json' with { type: 'json' };
-import { loadConfig } from './config.js';
+import { loadConfig, applyCliOverrides } from './config.js';
 import { ClaudeCliProvider } from './agent/providers/claude-cli.js';
 import { SessionManager } from './state/session-manager.js';
 import { enableDebugLog, debug } from './logger/debug-logger.js';
@@ -91,13 +91,18 @@ if (!fs.existsSync(opts.configFile)) {
   }
 }
 
-const config = loadConfig(opts.configFile);
-
-// Resolve paths: CLI > config > default
-const logDir = opts.logDir ?? path.join(defaultConfigDir, 'logs');
-const workspacePath =
-  opts.workspace || config.workspacePath || path.join(defaultConfigDir, 'workspace');
-config.workspacePath = workspacePath;
+const loadedConfig = loadConfig(opts.configFile);
+const { config, workspacePath, logDir, bypassPermissions } = applyCliOverrides(
+  loadedConfig,
+  {
+    workspace: opts.workspace,
+    logDir: opts.logDir,
+    dangerouslySkipPermissions: opts.dangerouslySkipPermissions,
+    claudeEnv: opts.claudeEnv,
+    claudeArgs: opts.claudeArgs,
+  },
+  defaultConfigDir,
+);
 
 // Ensure directories exist
 fs.mkdirSync(logDir, { recursive: true });
@@ -138,22 +143,6 @@ if (!fs.existsSync(path.join(workspacePath, '.env'))) {
 }
 
 debug('main', 'Resolved paths:', { configFile: opts.configFile, logDir, workspacePath });
-
-const bypassPermissions =
-  opts.dangerouslySkipPermissions || config.dangerouslySkipPermissions === true;
-
-// Merge CLI --claude-env into config (CLI overrides config)
-const cliClaudeEnv: Record<string, string> = opts.claudeEnv;
-if (Object.keys(cliClaudeEnv).length > 0) {
-  config.claudeEnv = { ...config.claudeEnv, ...cliClaudeEnv };
-}
-
-// Merge CLI --claude-args into config (appended after config args)
-const cliClaudeArgs: string[] = opts.claudeArgs;
-if (cliClaudeArgs.length > 0) {
-  config.claudeArgs = [...(config.claudeArgs ?? []), ...cliClaudeArgs];
-}
-
 debug('main', 'Creating ClaudeCliProvider');
 const provider = new ClaudeCliProvider({
   config,

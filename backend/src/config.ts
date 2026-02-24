@@ -110,6 +110,57 @@ export function loadConfig(configFile: string): AppConfig {
   }
 }
 
+export interface CliOverrides {
+  workspace?: string;
+  logDir?: string;
+  dangerouslySkipPermissions?: boolean;
+  claudeEnv?: Record<string, string>;
+  claudeArgs?: string[];
+}
+
+export interface ResolvedConfig {
+  config: AppConfig;
+  workspacePath: string;
+  logDir: string;
+  bypassPermissions: boolean;
+}
+
+export function applyCliOverrides(
+  config: AppConfig,
+  cliOpts: CliOverrides,
+  defaultConfigDir: string,
+): ResolvedConfig {
+  const workspacePath =
+    cliOpts.workspace || config.workspacePath || path.join(defaultConfigDir, 'workspace');
+
+  const logDir = cliOpts.logDir ?? path.join(defaultConfigDir, 'logs');
+
+  const bypassPermissions =
+    cliOpts.dangerouslySkipPermissions === true || config.dangerouslySkipPermissions === true;
+
+  let claudeEnv = config.claudeEnv;
+  if (cliOpts.claudeEnv && Object.keys(cliOpts.claudeEnv).length > 0) {
+    claudeEnv = { ...config.claudeEnv, ...cliOpts.claudeEnv };
+  }
+
+  let claudeArgs = config.claudeArgs;
+  if (cliOpts.claudeArgs && cliOpts.claudeArgs.length > 0) {
+    claudeArgs = [...(config.claudeArgs ?? []), ...cliOpts.claudeArgs];
+  }
+
+  return {
+    config: {
+      ...config,
+      workspacePath,
+      claudeEnv,
+      claudeArgs,
+    },
+    workspacePath,
+    logDir,
+    bypassPermissions,
+  };
+}
+
 function mergeConfig(defaults: AppConfig, partial: Partial<AppConfig>): AppConfig {
   const mcpServers: Record<string, McpServerConfig> = { ...defaults.mcpServers };
   if (partial.mcpServers) {
