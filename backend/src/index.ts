@@ -52,6 +52,12 @@ program
       return { ...prev, [key]: val };
     },
     {} as Record<string, string>,
+  )
+  .option(
+    '--claude-arg <arg>',
+    'Additional CLI argument for Claude CLI (repeatable)',
+    (value: string, prev: string[]) => [...prev, value],
+    [] as string[],
   );
 
 const argv = process.argv.slice(2);
@@ -140,6 +146,12 @@ const bypassPermissions =
 const cliClaudeEnv: Record<string, string> = opts.claudeEnv;
 if (Object.keys(cliClaudeEnv).length > 0) {
   config.claudeEnv = { ...config.claudeEnv, ...cliClaudeEnv };
+}
+
+// Merge CLI --claude-arg into config (appended after config args)
+const cliClaudeArgs: string[] = opts.claudeArg;
+if (cliClaudeArgs.length > 0) {
+  config.claudeArgs = [...(config.claudeArgs ?? []), ...cliClaudeArgs];
 }
 
 debug('main', 'Creating ClaudeCliProvider');
