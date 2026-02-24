@@ -1,0 +1,90 @@
+name: Release to npm
+on:
+  workflow_dispatch:
+    branches:
+      - main
+    inputs:
+      dry_run:
+        description: 'Dry-run (no publish/tag/release)'
+        required: true
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+      dist_tag:
+        description: 'npm dist-tag (e.g. latest, next)'
+        required: true
+        default: 'latest'
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write # tag push + release
+  id-token: write # for OIDC
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (fetch tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Read version & compute tag
+        id: meta
+        run: |
+          node -e "const p=require('./package.json'); console.log('version='+p.version); console.log('tag=v'+p.version);" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure tag does not already exist
+        run: |
+          if git rev-parse "${{ steps.meta.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Tag already exists: ${{ steps.meta.outputs.tag }}"
+            exit 1
+          fi
+
+      - name: Dry-run info
+        if: ${{ inputs.dry_run == 'true' }}
+        run: |
+          echo "DRY RUN: would publish to npm with dist-tag '${{ inputs.dist_tag }}'"
+          echo "DRY RUN: would create git tag '${{ steps.meta.outputs.tag }}' and GitHub Release"
+
+      - name: npm publish
+        if: ${{ inputs.dry_run == 'false' }}
+        run: |
+          npm publish --tag "${{ inputs.dist_tag }}"
+
+      - name: Create GitHub Release (and tag if missing)
+        if: ${{ inputs.dry_run == 'false' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.meta.outputs.tag }}" \
+            --target "${GITHUB_SHA}" \
+            --title "${{ steps.meta.outputs.tag }}" \
+            --generate-notes
