@@ -55,6 +55,19 @@ const loadedConfig = await loadAppConfig();
 const { config, workspacePath, logDir, bypassPermissions } = applyCliOverrides(loadedConfig, opts);
 
 debug('main', 'Resolved paths:', { configFile: opts.configFile, logDir, workspacePath });
+
+// Merge CLI --claude-env into config (CLI overrides config)
+const cliClaudeEnv: Record<string, string> = opts.claudeEnv;
+if (Object.keys(cliClaudeEnv).length > 0) {
+  config.claudeEnv = { ...config.claudeEnv, ...cliClaudeEnv };
+}
+
+// Merge CLI --claude-args into config (appended after config args)
+const cliClaudeArgs: string[] = opts.claudeArgs;
+if (cliClaudeArgs.length > 0) {
+  config.claudeArgs = [...(config.claudeArgs ?? []), ...cliClaudeArgs];
+}
+
 debug('main', 'Creating ClaudeCliProvider');
 const provider = new ClaudeCliProvider({
   config,

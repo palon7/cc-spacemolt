@@ -49,7 +49,7 @@ describe('loadConfig', () => {
     expect(config.initialPrompt).toBe(DEFAULT_CONFIG.initialPrompt);
   });
 
-  it('merges claudeEnv from config file', () => {
+  it('merges claudeEnv with defaults', () => {
     const config = loadConfig(createTempConfig({ claudeEnv: { FOO: 'bar' } }));
     expect(config.claudeEnv).toEqual({ FOO: 'bar' });
   });
