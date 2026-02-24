@@ -153,8 +153,8 @@ Configure via `data/config.json` (dev) or `~/.cc-spacemolt/config.json`. Main fi
 - `workspacePath` — working directory for Claude CLI
 - `language` — response language
 - `dangerouslySkipPermissions` — bypass all permissions
-- `claudeArgs` — additional CLI arguments appended to the Claude CLI command (string[])
-- `claudeEnv` — environment variables applied when launching the Claude CLI process (Record<string, string>)
+- `claudeArgs` — additional CLI arguments appended to the Claude CLI command
+- `claudeEnv` — environment variables applied when launching the Claude CLI process
 
 ## Testing
 

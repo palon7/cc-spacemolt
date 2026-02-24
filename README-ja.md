@@ -76,6 +76,8 @@ cc-spacemolt [options]
 | `--host <hostname>`              | `localhost`                                                  | バインドするホスト名（0.0.0.0 で外部アクセスを許可） |
 | `--debug`                        | —                                                            | デバッグログを有効化                                 |
 | `--dangerously-skip-permissions` | —                                                            | 全ての権限確認をスキップ                             |
+| `--claude-env <KEY=VALUE>`       | —                                                            | Claude CLI 用の環境変数（繰り返し指定可）            |
+| `--claude-args <args>`           | —                                                            | Claude CLI への追加引数（繰り返し指定可）            |
 
 コマンドライン引数は設定ファイルの内容より優先されます。
 
@@ -97,6 +99,8 @@ cc-spacemolt [options]
 | `language`                       | エージェントとの会話言語（例: `"Japanese"`）                         |
 | `uiLanguage`                     | Web UI セットアップウィザードの言語（`"en"` または `"ja"`）          |
 | `dangerouslySkipPermissions`     | 全ての権限確認をスキップ（`true` にする場合は十分注意してください）  |
+| `claudeArgs`                     | Claude CLI コマンドに追加される引数                                  |
+| `claudeEnv`                      | Claude CLI 起動時に適用される環境変数                                |
 
 ## 開発
 
