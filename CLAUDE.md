@@ -126,15 +126,17 @@ cc-spacemolt/
 
 ### CLI Options
 
-| Option                           | Default                                               | Description            |
-| -------------------------------- | ----------------------------------------------------- | ---------------------- |
-| `--config-file <path>`           | `~/.cc-spacemolt/config.json`                         | Path to config file    |
-| `--log-dir <path>`               | `~/.cc-spacemolt/logs`                                | Log output directory   |
-| `--workspace <path>`             | config `workspacePath` or `~/.cc-spacemolt/workspace` | Working directory      |
-| `--port <number>`                | `3001`                                                | HTTP server port       |
-| `--host <hostname>`              | `localhost`                                           | Bind hostname          |
-| `--debug`                        | —                                                     | Enable debug logging   |
-| `--dangerously-skip-permissions` | —                                                     | Bypass all permissions |
+| Option                           | Default                                               | Description                                 |
+| -------------------------------- | ----------------------------------------------------- | ------------------------------------------- |
+| `--config-file <path>`           | `~/.cc-spacemolt/config.json`                         | Path to config file                         |
+| `--log-dir <path>`               | `~/.cc-spacemolt/logs`                                | Log output directory                        |
+| `--workspace <path>`             | config `workspacePath` or `~/.cc-spacemolt/workspace` | Working directory                           |
+| `--port <number>`                | `3001`                                                | HTTP server port                            |
+| `--host <hostname>`              | `localhost`                                           | Bind hostname                               |
+| `--debug`                        | —                                                     | Enable debug logging                        |
+| `--dangerously-skip-permissions` | —                                                     | Bypass all permissions                      |
+| `--claude-env <KEY=VALUE>`       | —                                                     | Env var for Claude CLI (repeatable)         |
+| `--claude-args <args>`           | —                                                     | Additional args for Claude CLI (repeatable) |
 
 Priority order: CLI args > config.json values > defaults
 
@@ -151,6 +153,8 @@ Configure via `data/config.json` (dev) or `~/.cc-spacemolt/config.json`. Main fi
 - `workspacePath` — working directory for Claude CLI
 - `language` — response language
 - `dangerouslySkipPermissions` — bypass all permissions
+- `claudeArgs` — additional CLI arguments appended to the Claude CLI command
+- `claudeEnv` — environment variables applied when launching the Claude CLI process
 
 ## Testing
 

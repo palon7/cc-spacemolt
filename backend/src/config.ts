@@ -1,6 +1,11 @@
 import consola from 'consola';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
+import type { CommandLineOptions } from './utils/command-line.js';
+
+// Default base directory
+export const defaultConfigDir = path.join(os.homedir(), '.cc-spacemolt');
 
 export interface McpServerConfig {
   type: 'stdio' | 'http' | 'sse';
@@ -50,6 +55,12 @@ export interface AppConfig {
 
   /** Skip all permission checks (equivalent to --dangerously-skip-permissions) */
   dangerouslySkipPermissions?: boolean;
+
+  /** Additional CLI arguments appended to the Claude CLI command */
+  claudeArgs?: string[];
+
+  /** Environment variables applied when launching the Claude CLI process */
+  claudeEnv?: Record<string, string>;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -104,6 +115,52 @@ export function loadConfig(configFile: string): AppConfig {
   }
 }
 
+export interface ResolvedConfig {
+  config: AppConfig;
+  workspacePath: string;
+  logDir: string;
+  bypassPermissions: boolean;
+}
+
+export function applyCliOverrides(
+  config: AppConfig,
+  cliOpts: CommandLineOptions,
+  _configDir?: string,
+): ResolvedConfig {
+  const configDir = _configDir ?? defaultConfigDir;
+
+  const workspacePath =
+    cliOpts.workspace || config.workspacePath || path.join(defaultConfigDir, 'workspace');
+
+  const logDir = cliOpts.logDir ?? path.join(configDir, 'logs');
+
+  const bypassPermissions =
+    Boolean(cliOpts.dangerouslySkipPermissions) || Boolean(config.dangerouslySkipPermissions);
+
+  const cliClaudeEnv = cliOpts.claudeEnv;
+
+  const claudeEnv =
+    Object.keys(cliClaudeEnv).length > 0
+      ? { ...config.claudeEnv, ...cliClaudeEnv }
+      : config.claudeEnv;
+
+  const cliClaudeArgs = cliOpts.claudeArgs;
+  const claudeArgs =
+    cliClaudeArgs.length > 0 ? [...(config.claudeArgs ?? []), ...cliClaudeArgs] : config.claudeArgs;
+
+  return {
+    config: {
+      ...config,
+      workspacePath,
+      claudeEnv,
+      claudeArgs,
+    },
+    workspacePath,
+    logDir,
+    bypassPermissions,
+  };
+}
+
 function mergeConfig(defaults: AppConfig, partial: Partial<AppConfig>): AppConfig {
   const mcpServers: Record<string, McpServerConfig> = { ...defaults.mcpServers };
   if (partial.mcpServers) {
@@ -130,5 +187,9 @@ function mergeConfig(defaults: AppConfig, partial: Partial<AppConfig>): AppConfi
     uiLanguage: partial.uiLanguage ?? defaults.uiLanguage,
     dangerouslySkipPermissions:
       partial.dangerouslySkipPermissions ?? defaults.dangerouslySkipPermissions,
+    claudeArgs: partial.claudeArgs ?? defaults.claudeArgs,
+    claudeEnv: partial.claudeEnv
+      ? { ...defaults.claudeEnv, ...partial.claudeEnv }
+      : defaults.claudeEnv,
   };
 }

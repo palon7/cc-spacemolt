@@ -155,6 +155,11 @@ export class ClaudeCliProvider implements AgentProvider {
       args.push('--resume', resumeId);
     }
 
+    // Custom args from config (appended last)
+    if (this.config.claudeArgs && this.config.claudeArgs.length > 0) {
+      args.push(...this.config.claudeArgs);
+    }
+
     return args;
   }
 
@@ -192,7 +197,7 @@ export class ClaudeCliProvider implements AgentProvider {
       const proc = spawn('claude', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd,
-        env: { ...process.env },
+        env: { ...process.env, ...this.config.claudeEnv },
       });
       this.process = proc;
       debug('provider', `Process spawned, pid=${proc.pid}`);

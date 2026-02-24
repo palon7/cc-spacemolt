@@ -76,6 +76,8 @@ cc-spacemolt [options]
 | `--host <hostname>`              | `localhost`                                                  | バインドするホスト名（0.0.0.0 で外部アクセスを許可） |
 | `--debug`                        | —                                                            | デバッグログを有効化                                 |
 | `--dangerously-skip-permissions` | —                                                            | 全ての権限確認をスキップ                             |
+| `--claude-env <KEY=VALUE>`       | —                                                            | Claude CLI 用の環境変数（繰り返し指定可）            |
+| `--claude-args <args>`           | —                                                            | Claude CLI への追加引数（繰り返し指定可）            |
 
 コマンドライン引数は設定ファイルの内容より優先されます。
 
@@ -83,20 +85,32 @@ cc-spacemolt [options]
 
 `~/.cc-spacemolt/config.json`（開発時は `data/config.json`）で動作を設定します。
 
-| フィールド                       | 説明                                                                 |
-| -------------------------------- | -------------------------------------------------------------------- |
-| `initialPrompt`                  | セッション開始時にエージェントへ送る最初のプロンプト（デフォルト値） |
-| `systemPromptAppend`             | Claude Code実行時の追加のシステムプロンプト                          |
-| `mcpServers`                     | MCP サーバー設定（`stdio` / `http` / `sse`）                         |
-| `permissions.autoAllowTools`     | 自動承認される組み込みツール名のリスト                               |
-| `permissions.allowedMcpPrefixes` | 自動承認される MCP ツールのプレフィックス                            |
-| `permissions.allowedWebDomains`  | WebFetch / WebSearch で自動承認するドメイン                          |
-| `maxLogEntries`                  | メモリ上に保持するログエントリの最大数                               |
-| `model`                          | 使用する Claude モデル                                               |
-| `workspacePath`                  | Claude CLI の作業ディレクトリ（未指定時はデフォルトディレクトリ）    |
-| `language`                       | エージェントとの会話言語（例: `"Japanese"`）                         |
-| `uiLanguage`                     | Web UI セットアップウィザードの言語（`"en"` または `"ja"`）          |
-| `dangerouslySkipPermissions`     | 全ての権限確認をスキップ（`true` にする場合は十分注意してください）  |
+```jsonc
+{
+  "initialPrompt": "...", // セッション開始時にエージェントに送られる初期プロンプト
+  "systemPromptAppend": "...", // Claude Code 実行時に追加されるシステムプロンプト
+  "mcpServers": {
+    // MCP サーバーの設定
+    "spacemolt": {
+      "type": "http",
+      "url": "https://game.spacemolt.com/mcp",
+    },
+  },
+  "permissions": {
+    "autoAllowTools": [], // 自動承認する組み込みツール名
+    "allowedMcpPrefixes": ["mcp__spacemolt__"], // 自動承認する MCP ツールのプレフィックス
+    "allowedWebDomains": ["game.spacemolt.com", "spacemolt.com"], // WebFetch / WebSearch で自動承認するドメイン
+  },
+  "maxLogEntries": 1000, // メモリ上に保持するログエントリの最大数
+  "model": "sonnet", // 使用する Claude モデル
+  "workspacePath": "/path/to/workspace", // Claude CLI の作業ディレクトリ
+  "language": "Japanese", // エージェントとの会話言語（例: "English", "Japanese"）
+  "uiLanguage": "ja", // Web UI の言語（"en" または "ja"）
+  "dangerouslySkipPermissions": false, // 全ての権限確認をスキップ（使用する場合は十分に注意してください）
+  "claudeArgs": ["--verbose"], // Claude CLI コマンドに追加される引数
+  "claudeEnv": { "MY_VAR": "value" }, // Claude CLI 起動時に適用される環境変数
+}
+```
 
 ## 開発
 
