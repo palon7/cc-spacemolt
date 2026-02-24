@@ -146,6 +146,17 @@ export function applyCliOverrides(
     claudeArgs = [...(config.claudeArgs ?? []), ...cliOpts.claudeArgs];
   }
 
+  // Merge CLI env
+  const cliClaudeEnv: Record<string, string> = cliOpts.claudeEnv;
+  if (Object.keys(cliClaudeEnv).length > 0) {
+    config.claudeEnv = { ...config.claudeEnv, ...cliClaudeEnv };
+  }
+  // Merge CLI args
+  const cliClaudeArgs: string[] = cliOpts.claudeArgs;
+  if (cliClaudeArgs.length > 0) {
+    config.claudeArgs = [...(config.claudeArgs ?? []), ...cliClaudeArgs];
+  }
+
   return {
     config: {
       ...config,
