@@ -1,6 +1,7 @@
 import fs from 'fs';
 import consola from 'consola';
 import ora from 'ora';
+import type { UpdateInfo } from 'update-notifier';
 import updateNotifier from 'update-notifier';
 import packageJson from '../../package.json' with { type: 'json' };
 
@@ -16,6 +17,7 @@ import { fetchGameData } from './game/game-data-cache.js';
 import { bigLogoText } from './utils/logo.js';
 import type { CommandLineOptions } from './utils/command-line.js';
 import { parseCommandLine } from './utils/command-line.js';
+import { styleText } from 'util';
 
 async function loadAppConfig(opts: CommandLineOptions): Promise<AppConfig> {
   try {
@@ -42,14 +44,27 @@ async function loadAppConfig(opts: CommandLineOptions): Promise<AppConfig> {
   }
 }
 
-function showStartupBanner(workspacePath: string, configFilePath: string) {
+function getUpdateInfo() {
+  const notifier = updateNotifier({ pkg: packageJson, updateCheckInterval: 1000 * 60 * 60 * 12 });
+  return notifier.update;
+}
+
+function showStartupBanner(
+  workspacePath: string,
+  configFilePath: string,
+  update: UpdateInfo | undefined,
+) {
   console.log(`${bigLogoText}\n`);
-  const notifier = updateNotifier({ pkg: packageJson });
-  if (notifier.update) {
-    notifier.notify({ defer: false });
-  }
+
   console.log(`Workspace: ${workspacePath}`);
   console.log(`Config: ${configFilePath}\n`);
+
+  if (update) {
+    const currentVer = styleText('red', update.current);
+    const latestVer = styleText('greenBright', update.latest);
+    const updateCmd = styleText('cyan', 'npm install -g cc-spacemolt');
+    consola.box(`Update available ${currentVer} → ${latestVer}\nRun ${updateCmd} to update`);
+  }
 }
 
 async function loadGameData(): Promise<CachedGameData> {
@@ -85,7 +100,8 @@ async function main() {
 
   debug('main', 'Resolved paths:', { configFile: opts.configFile, logDir, workspacePath });
 
-  showStartupBanner(workspacePath, opts.configFile);
+  const update = getUpdateInfo();
+  showStartupBanner(workspacePath, opts.configFile, update);
 
   const provider = new ClaudeCliProvider({
     config,

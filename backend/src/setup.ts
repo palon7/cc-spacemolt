@@ -5,7 +5,7 @@ import { input, select, password, confirm } from '@inquirer/prompts';
 import { DEFAULT_CONFIG } from './config.js';
 import type { AppConfig } from './config.js';
 import { bigLogoText } from './utils/logo.js';
-import { getMessages } from './i18n/setup-messages.js';
+import { getMessages } from './i18n/messages.js';
 
 function printSectionHeader(label: string) {
   console.log('\n' + '─'.repeat(56));
