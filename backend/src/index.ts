@@ -18,6 +18,7 @@ import { bigLogoText } from './utils/logo.js';
 import type { CommandLineOptions } from './utils/command-line.js';
 import { parseCommandLine } from './utils/command-line.js';
 import { styleText } from 'util';
+import { getVersion } from './utils/version.js';
 
 async function loadAppConfig(opts: CommandLineOptions): Promise<AppConfig> {
   try {
@@ -56,8 +57,9 @@ function showStartupBanner(
 ) {
   console.log(`${bigLogoText}\n`);
 
-  console.log(`Workspace: ${workspacePath}`);
-  console.log(`Config: ${configFilePath}\n`);
+  console.log(`${styleText('green', `Version`)} ${getVersion()}`);
+  console.log(`${styleText('cyan', `Workspace:`)} ${workspacePath}`);
+  console.log(`${styleText('cyan', `Config:`)} ${configFilePath}\n`);
 
   if (update) {
     const currentVer = styleText('red', update.current);
