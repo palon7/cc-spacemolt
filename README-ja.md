@@ -87,23 +87,26 @@ cc-spacemolt [options]
 
 ```jsonc
 {
-  "initialPrompt": "...", // セッション開始時にエージェントへ送る最初のプロンプト
+  "initialPrompt": "...", // セッション開始時にエージェントに送られる初期プロンプト
   "systemPromptAppend": "...", // Claude Code 実行時に追加されるシステムプロンプト
   "mcpServers": {
-    // MCP サーバー設定（stdio / http / sse）
-    "my-server": { "type": "http", "url": "https://example.com/mcp" },
+    // MCP サーバーの設定
+    "spacemolt": {
+      "type": "http",
+      "url": "https://game.spacemolt.com/mcp",
+    },
   },
   "permissions": {
     "autoAllowTools": [], // 自動承認する組み込みツール名
     "allowedMcpPrefixes": ["mcp__spacemolt__"], // 自動承認する MCP ツールのプレフィックス
-    "allowedWebDomains": ["example.com"], // WebFetch / WebSearch で自動承認するドメイン
+    "allowedWebDomains": ["game.spacemolt.com", "spacemolt.com"], // WebFetch / WebSearch で自動承認するドメイン
   },
   "maxLogEntries": 1000, // メモリ上に保持するログエントリの最大数
   "model": "sonnet", // 使用する Claude モデル
   "workspacePath": "/path/to/workspace", // Claude CLI の作業ディレクトリ
-  "language": "Japanese", // エージェントとの会話言語
+  "language": "Japanese", // エージェントとの会話言語（例: "English", "Japanese"）
   "uiLanguage": "ja", // Web UI の言語（"en" または "ja"）
-  "dangerouslySkipPermissions": false, // 全ての権限確認をスキップ（十分注意してください）
+  "dangerouslySkipPermissions": false, // 全ての権限確認をスキップ（使用する場合は十分に注意してください）
   "claudeArgs": ["--verbose"], // Claude CLI コマンドに追加される引数
   "claudeEnv": { "MY_VAR": "value" }, // Claude CLI 起動時に適用される環境変数
 }

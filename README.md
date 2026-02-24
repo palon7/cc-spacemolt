@@ -90,18 +90,21 @@ Configure behavior via `~/.cc-spacemolt/config.json` (or `data/config.json` duri
   "initialPrompt": "...", // Default initial prompt sent to the agent at session start
   "systemPromptAppend": "...", // Additional system prompt appended when running Claude Code
   "mcpServers": {
-    // MCP server configuration (stdio / http / sse)
-    "my-server": { "type": "http", "url": "https://example.com/mcp" },
+    // MCP server configuration
+    "spacemolt": {
+      "type": "http",
+      "url": "https://game.spacemolt.com/mcp",
+    },
   },
   "permissions": {
-    "autoAllowTools": [], // Built-in tool names to auto-approve
+    "autoAllowTools": [], // Tool names to auto-approve
     "allowedMcpPrefixes": ["mcp__spacemolt__"], // MCP tool prefixes to auto-approve
-    "allowedWebDomains": ["example.com"], // Domains to auto-approve for WebFetch / WebSearch
+    "allowedWebDomains": ["game.spacemolt.com", "spacemolt.com"], // Domains to auto-approve for WebFetch / WebSearch
   },
-  "maxLogEntries": 1000, // Maximum number of log entries to keep in memory
+  "maxLogEntries": 1000, // Maximum number of conversation log entries to keep
   "model": "sonnet", // Claude model to use
-  "workspacePath": "/path/to/workspace", // Working directory for Claude CLI
-  "language": "English", // Language for agent responses
+  "workspacePath": "/path/to/workspace", // Working directory for Claude Code
+  "language": "English", // Language for agent responses (e.g. "English", "Japanese")
   "uiLanguage": "en", // Language for the Web UI setup wizard ("en" or "ja")
   "dangerouslySkipPermissions": false, // Bypass all permission checks (use with caution)
   "claudeArgs": ["--verbose"], // Additional CLI arguments appended to the Claude CLI command
