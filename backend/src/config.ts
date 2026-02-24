@@ -129,9 +129,6 @@ export function applyCliOverrides(
 ): ResolvedConfig {
   const configDir = _configDir ?? defaultConfigDir;
 
-  console.log(cliOpts.workspace);
-  console.log(config.workspacePath);
-
   const workspacePath =
     cliOpts.workspace || config.workspacePath || path.join(defaultConfigDir, 'workspace');
 
@@ -141,7 +138,6 @@ export function applyCliOverrides(
     Boolean(cliOpts.dangerouslySkipPermissions) || Boolean(config.dangerouslySkipPermissions);
 
   const cliClaudeEnv = cliOpts.claudeEnv;
-  console.log('env:', cliClaudeEnv);
 
   const claudeEnv =
     Object.keys(cliClaudeEnv).length > 0
