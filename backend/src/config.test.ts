@@ -77,7 +77,7 @@ describe('applyCliOverrides', () => {
     it('falls back to default when config workspacePath is empty string', () => {
       const config = makeConfig({ workspacePath: '' });
       const result = applyCliOverrides(config, makeCliOptions(), FAKE_CONFIG_DIR);
-      expect(result.workspacePath).toBe(path.join(FAKE_CONFIG_DIR, 'workspace'));
+      expect(result.workspacePath).toBe(path.join(os.homedir(), '.cc-spacemolt', 'workspace'));
     });
   });
 

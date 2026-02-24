@@ -127,35 +127,30 @@ export function applyCliOverrides(
   cliOpts: CommandLineOptions,
   _configDir?: string,
 ): ResolvedConfig {
-  const configDir = _configDir ? _configDir : defaultConfigDir;
+  const configDir = _configDir ?? defaultConfigDir;
+
+  console.log(cliOpts.workspace);
+  console.log(config.workspacePath);
+
   const workspacePath =
-    cliOpts.workspace || config.workspacePath || path.join(configDir, 'workspace');
+    cliOpts.workspace || config.workspacePath || path.join(defaultConfigDir, 'workspace');
 
   const logDir = cliOpts.logDir ?? path.join(configDir, 'logs');
 
   const bypassPermissions =
-    cliOpts.dangerouslySkipPermissions === true || config.dangerouslySkipPermissions === true;
+    Boolean(cliOpts.dangerouslySkipPermissions) || Boolean(config.dangerouslySkipPermissions);
 
-  let claudeEnv = config.claudeEnv;
-  if (cliOpts.claudeEnv && Object.keys(cliOpts.claudeEnv).length > 0) {
-    claudeEnv = { ...config.claudeEnv, ...cliOpts.claudeEnv };
-  }
+  const cliClaudeEnv = cliOpts.claudeEnv;
+  console.log('env:', cliClaudeEnv);
 
-  let claudeArgs = config.claudeArgs;
-  if (cliOpts.claudeArgs && cliOpts.claudeArgs.length > 0) {
-    claudeArgs = [...(config.claudeArgs ?? []), ...cliOpts.claudeArgs];
-  }
+  const claudeEnv =
+    Object.keys(cliClaudeEnv).length > 0
+      ? { ...config.claudeEnv, ...cliClaudeEnv }
+      : config.claudeEnv;
 
-  // Merge CLI env
-  const cliClaudeEnv: Record<string, string> = cliOpts.claudeEnv;
-  if (Object.keys(cliClaudeEnv).length > 0) {
-    config.claudeEnv = { ...config.claudeEnv, ...cliClaudeEnv };
-  }
-  // Merge CLI args
-  const cliClaudeArgs: string[] = cliOpts.claudeArgs;
-  if (cliClaudeArgs.length > 0) {
-    config.claudeArgs = [...(config.claudeArgs ?? []), ...cliClaudeArgs];
-  }
+  const cliClaudeArgs = cliOpts.claudeArgs;
+  const claudeArgs =
+    cliClaudeArgs.length > 0 ? [...(config.claudeArgs ?? []), ...cliClaudeArgs] : config.claudeArgs;
 
   return {
     config: {
