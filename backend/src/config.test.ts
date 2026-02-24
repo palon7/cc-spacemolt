@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { loadConfig } from './config.js';
+import { loadConfig, DEFAULT_CONFIG } from './config.js';
 
 function createTempConfig(content: object): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cc-spacemolt-test-'));
@@ -12,34 +12,21 @@ function createTempConfig(content: object): string {
 }
 
 describe('loadConfig', () => {
-  describe('claudeArgs', () => {
-    it('defaults to undefined when not specified', () => {
-      const config = loadConfig(createTempConfig({}));
-      expect(config.claudeArgs).toBeUndefined();
-    });
-
-    it('loads claudeArgs from config file', () => {
-      const config = loadConfig(
-        createTempConfig({ claudeArgs: ['--max-turns', '50', '--verbose'] }),
-      );
-      expect(config.claudeArgs).toEqual(['--max-turns', '50', '--verbose']);
-    });
+  it('returns defaults for empty config', () => {
+    const config = loadConfig(createTempConfig({}));
+    expect(config.initialPrompt).toBe(DEFAULT_CONFIG.initialPrompt);
+    expect(config.maxLogEntries).toBe(DEFAULT_CONFIG.maxLogEntries);
   });
 
-  describe('claudeEnv', () => {
-    it('defaults to undefined when not specified', () => {
-      const config = loadConfig(createTempConfig({}));
-      expect(config.claudeEnv).toBeUndefined();
-    });
+  it('merges partial config over defaults', () => {
+    const config = loadConfig(createTempConfig({ maxLogEntries: 500, model: 'opus' }));
+    expect(config.maxLogEntries).toBe(500);
+    expect(config.model).toBe('opus');
+    expect(config.initialPrompt).toBe(DEFAULT_CONFIG.initialPrompt);
+  });
 
-    it('loads claudeEnv from config file', () => {
-      const config = loadConfig(
-        createTempConfig({ claudeEnv: { ANTHROPIC_API_KEY: 'sk-test', NODE_ENV: 'production' } }),
-      );
-      expect(config.claudeEnv).toEqual({
-        ANTHROPIC_API_KEY: 'sk-test',
-        NODE_ENV: 'production',
-      });
-    });
+  it('merges claudeEnv with defaults', () => {
+    const config = loadConfig(createTempConfig({ claudeEnv: { FOO: 'bar' } }));
+    expect(config.claudeEnv).toEqual({ FOO: 'bar' });
   });
 });

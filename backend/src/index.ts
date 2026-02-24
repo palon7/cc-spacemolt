@@ -54,9 +54,9 @@ program
     {} as Record<string, string>,
   )
   .option(
-    '--claude-arg <arg>',
-    'Additional CLI argument for Claude CLI (repeatable)',
-    (value: string, prev: string[]) => [...prev, value],
+    '--claude-args <args>',
+    'Additional args for Claude CLI, space-separated (repeatable)',
+    (value: string, prev: string[]) => [...prev, ...value.split(/\s+/).filter(Boolean)],
     [] as string[],
   );
 
@@ -148,8 +148,8 @@ if (Object.keys(cliClaudeEnv).length > 0) {
   config.claudeEnv = { ...config.claudeEnv, ...cliClaudeEnv };
 }
 
-// Merge CLI --claude-arg into config (appended after config args)
-const cliClaudeArgs: string[] = opts.claudeArg;
+// Merge CLI --claude-args into config (appended after config args)
+const cliClaudeArgs: string[] = opts.claudeArgs;
 if (cliClaudeArgs.length > 0) {
   config.claudeArgs = [...(config.claudeArgs ?? []), ...cliClaudeArgs];
 }
