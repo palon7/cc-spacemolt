@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { GameState, GameConnectionStatus } from '@cc-spacemolt/shared';
+import { getVersion } from '../utils/version';
 
 interface TopBarProps {
   connected: boolean;
@@ -52,7 +53,7 @@ export function TopBar({ connected, gameStatus, gameState }: TopBarProps) {
           </span>
         </div>
         <span className="text-zinc-800 hidden sm:inline">|</span>
-        <span className="text-xs text-zinc-600 font-mono hidden sm:inline">v1.0.1</span>
+        <span className="text-xs text-zinc-600 font-mono hidden sm:inline">v{getVersion()}</span>
       </div>
       <div className="flex items-center gap-2 sm:gap-4">
         <div

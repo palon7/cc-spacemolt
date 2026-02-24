@@ -1,6 +1,6 @@
-import type { SetupMessages } from './setup-messages.js';
+import type { TranslationMessages } from './messages.js';
 
-export const en: SetupMessages = {
+export const en: TranslationMessages = {
   setup: {
     step2: {
       header: 'Step 2/5 · Workspace',

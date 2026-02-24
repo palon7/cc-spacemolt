@@ -1,4 +1,4 @@
-export interface SetupMessages {
+export interface TranslationMessages {
   setup: {
     step2: {
       header: string;
@@ -48,9 +48,9 @@ export interface SetupMessages {
   };
 }
 
-import { en } from './setup-messages.en.js';
-import { ja } from './setup-messages.ja.js';
+import { en } from './messages.en.js';
+import { ja } from './messages.ja.js';
 
-export function getMessages(language: string): SetupMessages {
+export function getMessages(language: string): TranslationMessages {
   return language === 'ja' ? ja : en;
 }
