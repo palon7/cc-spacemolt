@@ -217,7 +217,13 @@ export type ClientMessage =
 export type ServerMessage =
   | { type: 'entry'; entry: ParsedEntry }
   | { type: 'meta'; meta: SessionMeta }
-  | { type: 'config'; initialPrompt: string }
+  | {
+      type: 'config';
+      initialPrompt: string;
+      agentAvatarUrl?: string;
+      userName?: string;
+      userAvatarUrl?: string;
+    }
   | { type: 'status'; status: AgentStatus }
   | { type: 'clear_streaming' }
   | { type: 'reset' }

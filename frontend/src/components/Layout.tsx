@@ -25,6 +25,9 @@ interface LayoutProps {
   events: GameEvent[];
   travelHistory: TravelHistoryEntry[];
   initialPrompt: string;
+  agentAvatarUrl?: string;
+  userName?: string;
+  userAvatarUrl?: string;
   startAgent: (instructions?: string) => void;
   sendMessage: (text: string) => void;
   interrupt: () => void;
@@ -42,6 +45,9 @@ export function Layout({
   events,
   travelHistory,
   initialPrompt,
+  agentAvatarUrl,
+  userName,
+  userAvatarUrl,
   startAgent,
   sendMessage,
   interrupt,
@@ -79,6 +85,10 @@ export function Layout({
               status={status}
               connected={connected}
               initialPrompt={initialPrompt}
+              agentName={gameState?.player.username}
+              agentAvatarUrl={agentAvatarUrl}
+              userName={userName}
+              userAvatarUrl={userAvatarUrl}
               startAgent={startAgent}
               sendMessage={sendMessage}
               interrupt={interrupt}
@@ -112,6 +122,10 @@ export function Layout({
               status={status}
               connected={connected}
               initialPrompt={initialPrompt}
+              agentName={gameState?.player.username}
+              agentAvatarUrl={agentAvatarUrl}
+              userName={userName}
+              userAvatarUrl={userAvatarUrl}
               startAgent={startAgent}
               sendMessage={sendMessage}
               interrupt={interrupt}

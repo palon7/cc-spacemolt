@@ -1,19 +1,36 @@
+import { useState } from 'react';
 import type { TextEntry } from '@cc-spacemolt/shared';
 import { MarkdownContent } from '../common/MarkdownContent';
 import { MessageHeader } from './MessageHeader';
 
-export function TextMessage({ entry }: { entry: TextEntry }) {
+export function TextMessage({
+  entry,
+  name,
+  avatarUrl,
+}: {
+  entry: TextEntry;
+  name?: string;
+  avatarUrl?: string;
+}) {
+  const [imgError, setImgError] = useState(false);
+
+  const icon =
+    avatarUrl && !imgError ? (
+      <img
+        src={avatarUrl}
+        alt=""
+        className="w-3 h-3 rounded-full object-cover shrink-0"
+        onError={() => setImgError(true)}
+      />
+    ) : (
+      <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center shrink-0">
+        <span className="text-2xs font-bold text-white">C</span>
+      </div>
+    );
+
   return (
     <div>
-      <MessageHeader
-        icon={
-          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center shrink-0">
-            <span className="text-2xs font-bold text-white">C</span>
-          </div>
-        }
-        label="Agent"
-        timestamp={entry.timestamp}
-      >
+      <MessageHeader icon={icon} label={name ?? 'Agent'} timestamp={entry.timestamp}>
         {entry.isStreaming && (
           <div className="flex gap-0.5 ml-1">
             {[0, 150, 300].map((d) => (

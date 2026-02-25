@@ -8,8 +8,9 @@ import { setupWebSocket } from './ws-handler.js';
 import { debug } from './logger/debug-logger.js';
 import { listSessions, replaySession } from './state/session-history.js';
 import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
 import { networkInterfaces } from 'os';
-import { resolve, dirname } from 'path';
+import { resolve, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { styleText } from 'util';
 
@@ -32,6 +33,15 @@ function getNetworkAddresses(bindHost: string): string[] {
   return addresses;
 }
 
+const MIME_TYPES: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+};
+
 export interface ServerOptions {
   port: number;
   host: string;
@@ -40,6 +50,9 @@ export interface ServerOptions {
   initialPrompt: string;
   gameData: CachedGameData;
   logDir: string;
+  workspacePath: string;
+  userName?: string;
+  userAvatarPath?: string;
 }
 
 export interface ServerResult {
@@ -54,6 +67,9 @@ export function startServer({
   initialPrompt,
   gameData,
   logDir,
+  workspacePath,
+  userName,
+  userAvatarPath,
 }: ServerOptions): ServerResult {
   const app = new Hono();
 
@@ -85,6 +101,29 @@ export function startServer({
     } catch {
       return c.json({ error: 'Session not found' }, 404);
     }
+  });
+
+  app.get('/api/agent-avatar', async (c) => {
+    const avatarPath = resolve(workspacePath, 'avatar.png');
+    if (!existsSync(avatarPath)) {
+      return c.json({ error: 'Not found' }, 404);
+    }
+    const data = await readFile(avatarPath);
+    c.header('Content-Type', 'image/png');
+    c.header('Cache-Control', 'no-cache');
+    return c.body(data);
+  });
+
+  app.get('/api/user-avatar', async (c) => {
+    if (!userAvatarPath || !existsSync(userAvatarPath)) {
+      return c.json({ error: 'Not found' }, 404);
+    }
+    const ext = extname(userAvatarPath).toLowerCase();
+    const contentType = MIME_TYPES[ext] ?? 'application/octet-stream';
+    const data = await readFile(userAvatarPath);
+    c.header('Content-Type', contentType);
+    c.header('Cache-Control', 'no-cache');
+    return c.body(data);
   });
 
   // Serve frontend static files (production mode)
@@ -126,6 +165,9 @@ export function startServer({
     gameConnectionManager,
     initialPrompt,
     logDir,
+    workspacePath,
+    userName,
+    userAvatarPath,
   });
 
   return { server };

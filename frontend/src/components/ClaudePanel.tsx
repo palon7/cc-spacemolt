@@ -41,6 +41,10 @@ interface ClaudePanelProps {
   status: AgentStatus;
   connected: boolean;
   initialPrompt: string;
+  agentName?: string;
+  agentAvatarUrl?: string;
+  userName?: string;
+  userAvatarUrl?: string;
   startAgent: (instructions?: string) => void;
   sendMessage: (text: string) => void;
   interrupt: () => void;
@@ -54,6 +58,10 @@ export function ClaudePanel({
   status,
   connected,
   initialPrompt,
+  agentName,
+  agentAvatarUrl,
+  userName,
+  userAvatarUrl,
   startAgent,
   sendMessage,
   interrupt,
@@ -219,6 +227,10 @@ export function ClaudePanel({
                 entry={entry}
                 toolResultMap={toolResultMap}
                 isFirstSystem={entry.id === firstSystemId}
+                agentName={agentName}
+                agentAvatarUrl={agentAvatarUrl}
+                userName={userName}
+                userAvatarUrl={userAvatarUrl}
               />
             ));
           })()}

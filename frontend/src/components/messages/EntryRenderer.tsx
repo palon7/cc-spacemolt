@@ -10,16 +10,24 @@ export function EntryRenderer({
   entry,
   toolResultMap,
   isFirstSystem,
+  agentName,
+  agentAvatarUrl,
+  userName,
+  userAvatarUrl,
 }: {
   entry: ParsedEntry;
   toolResultMap: Map<string, ToolResultEntry>;
   isFirstSystem?: boolean;
+  agentName?: string;
+  agentAvatarUrl?: string;
+  userName?: string;
+  userAvatarUrl?: string;
 }) {
   switch (entry.kind) {
     case 'system':
       return isFirstSystem ? <SystemMessage entry={entry} /> : null;
     case 'text':
-      return <TextMessage entry={entry} />;
+      return <TextMessage entry={entry} name={agentName} avatarUrl={agentAvatarUrl} />;
     case 'thinking':
       return <ThinkingBlock entry={entry} />;
     case 'tool_call':
@@ -27,7 +35,7 @@ export function EntryRenderer({
     case 'tool_result':
       return null;
     case 'user_message':
-      return <UserMessage entry={entry} />;
+      return <UserMessage entry={entry} name={userName} avatarUrl={userAvatarUrl} />;
     case 'result':
       return <ResultMessage entry={entry} />;
   }

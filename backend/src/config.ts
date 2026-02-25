@@ -61,6 +61,12 @@ export interface AppConfig {
 
   /** Environment variables applied when launching the Claude CLI process */
   claudeEnv?: Record<string, string>;
+
+  /** Display name for the human operator (shown in UserMessage) */
+  userName?: string;
+
+  /** Path to an avatar image for the human operator (shown in UserMessage) */
+  userAvatarPath?: string;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -191,5 +197,7 @@ function mergeConfig(defaults: AppConfig, partial: Partial<AppConfig>): AppConfi
     claudeEnv: partial.claudeEnv
       ? { ...defaults.claudeEnv, ...partial.claudeEnv }
       : defaults.claudeEnv,
+    userName: partial.userName ?? defaults.userName,
+    userAvatarPath: partial.userAvatarPath ?? defaults.userAvatarPath,
   };
 }
