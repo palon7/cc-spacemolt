@@ -61,7 +61,15 @@ export function setupWebSocket({
     onClearStreaming: () => broadcast(wss, { type: 'clear_streaming' }),
     onError: (message: string) => broadcast(wss, { type: 'error', message }),
     onSessionStarted: (sessionId: string) => {
-      gameConnectionManager.setSessionDir(path.join(logDir, sessionId), sessionId);
+      const sessionDir = path.join(logDir, sessionId);
+      gameConnectionManager.setSessionDir(sessionDir, sessionId);
+      // Load persisted travel history from disk (e.g., after server restart)
+      loadTravelHistory(sessionDir).then((history) => {
+        if (history.length > 0) {
+          gameConnectionManager.setTravelHistory(history, sessionId);
+          broadcast(wss, { type: 'travel_history', history });
+        }
+      });
     },
   });
 
