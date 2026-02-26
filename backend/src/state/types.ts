@@ -9,6 +9,7 @@ export type {
   ToolResultEntry,
   UserMessageEntry,
   ResultEntry,
+  NotificationEntry,
   ParsedEntry,
   AgentStatus,
   SessionMeta,
