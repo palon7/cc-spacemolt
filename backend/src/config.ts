@@ -154,12 +154,18 @@ export function applyCliOverrides(
   const claudeArgs =
     cliClaudeArgs.length > 0 ? [...(config.claudeArgs ?? []), ...cliClaudeArgs] : config.claudeArgs;
 
+  // Resolve userAvatarPath relative to workspacePath when it's a relative path
+  const userAvatarPath = config.userAvatarPath
+    ? path.resolve(workspacePath, config.userAvatarPath)
+    : undefined;
+
   return {
     config: {
       ...config,
       workspacePath,
       claudeEnv,
       claudeArgs,
+      userAvatarPath,
     },
     workspacePath,
     logDir,

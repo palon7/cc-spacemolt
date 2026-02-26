@@ -33,13 +33,12 @@ function getNetworkAddresses(bindHost: string): string[] {
   return addresses;
 }
 
-const MIME_TYPES: Record<string, string> = {
+const AVATAR_MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.gif': 'image/gif',
   '.webp': 'image/webp',
-  '.svg': 'image/svg+xml',
 };
 
 export interface ServerOptions {
@@ -105,25 +104,33 @@ export function startServer({
 
   app.get('/api/agent-avatar', async (c) => {
     const avatarPath = resolve(workspacePath, 'avatar.png');
-    if (!existsSync(avatarPath)) {
+    try {
+      const data = await readFile(avatarPath);
+      c.header('Content-Type', 'image/png');
+      c.header('Cache-Control', 'no-cache');
+      return c.body(data);
+    } catch {
       return c.json({ error: 'Not found' }, 404);
     }
-    const data = await readFile(avatarPath);
-    c.header('Content-Type', 'image/png');
-    c.header('Cache-Control', 'no-cache');
-    return c.body(data);
   });
 
   app.get('/api/user-avatar', async (c) => {
-    if (!userAvatarPath || !existsSync(userAvatarPath)) {
+    if (!userAvatarPath) {
       return c.json({ error: 'Not found' }, 404);
     }
     const ext = extname(userAvatarPath).toLowerCase();
-    const contentType = MIME_TYPES[ext] ?? 'application/octet-stream';
-    const data = await readFile(userAvatarPath);
-    c.header('Content-Type', contentType);
-    c.header('Cache-Control', 'no-cache');
-    return c.body(data);
+    const contentType = AVATAR_MIME_TYPES[ext];
+    if (!contentType) {
+      return c.json({ error: 'Unsupported image type' }, 400);
+    }
+    try {
+      const data = await readFile(userAvatarPath);
+      c.header('Content-Type', contentType);
+      c.header('Cache-Control', 'no-cache');
+      return c.body(data);
+    } catch {
+      return c.json({ error: 'Not found' }, 404);
+    }
   });
 
   // Serve frontend static files (production mode)

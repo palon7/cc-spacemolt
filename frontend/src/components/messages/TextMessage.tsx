@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import type { TextEntry } from '@cc-spacemolt/shared';
 import { MarkdownContent } from '../common/MarkdownContent';
+import { Avatar } from '../common/Avatar';
 import { MessageHeader } from './MessageHeader';
 
 export function TextMessage({
@@ -12,21 +12,9 @@ export function TextMessage({
   name?: string;
   avatarUrl?: string;
 }) {
-  const [imgError, setImgError] = useState(false);
-
-  const icon =
-    avatarUrl && !imgError ? (
-      <img
-        src={avatarUrl}
-        alt=""
-        className="w-3 h-3 rounded-full object-cover shrink-0"
-        onError={() => setImgError(true)}
-      />
-    ) : (
-      <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center shrink-0">
-        <span className="text-2xs font-bold text-white">C</span>
-      </div>
-    );
+  const icon = (
+    <Avatar url={avatarUrl} initial="C" gradientClasses="from-orange-400 to-amber-600" />
+  );
 
   return (
     <div>
