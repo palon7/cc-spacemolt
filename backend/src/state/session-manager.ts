@@ -284,7 +284,7 @@ export class SessionManager {
           id: crypto.randomUUID(),
           timestamp: new Date().toISOString(),
           kind: 'notification',
-          text: 'session compacted',
+          text: 'Session Compacted',
         };
         this.addEntry(notification);
         this.callbacks?.onEntry(notification);
