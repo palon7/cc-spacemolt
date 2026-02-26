@@ -280,6 +280,14 @@ export class SessionManager {
       if (msg.subtype === 'compact_boundary' && this.sessionMeta) {
         this.sessionMeta = { ...this.sessionMeta, isCompacting: false };
         this.callbacks?.onMeta(this.sessionMeta);
+        const notification: ParsedEntry = {
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          kind: 'notification',
+          text: 'session compacted',
+        };
+        this.addEntry(notification);
+        this.callbacks?.onEntry(notification);
       }
     }
   }
