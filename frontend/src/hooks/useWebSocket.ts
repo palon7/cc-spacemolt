@@ -10,7 +10,12 @@ import type {
   GameEvent,
   GameConnectionStatus,
   TravelHistoryEntry,
+  RuntimeSettings,
 } from '@cc-spacemolt/shared';
+
+const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = {
+  autoResume: { enabled: false, timeoutMinutes: 0, startedAt: null, stopping: false },
+};
 
 export function useWebSocket() {
   const [entries, setEntries] = useState<ParsedEntry[]>([]);
@@ -24,6 +29,7 @@ export function useWebSocket() {
   const [initialPrompt, setInitialPrompt] = useState('');
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [travelHistory, setTravelHistory] = useState<TravelHistoryEntry[]>([]);
+  const [runtimeSettings, setRuntimeSettings] = useState<RuntimeSettings>(DEFAULT_RUNTIME_SETTINGS);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mountedRef = useRef(false);
@@ -104,9 +110,13 @@ export function useWebSocket() {
           setSessionMeta(null);
           setStatus('idle');
           setTravelHistory([]);
+          setRuntimeSettings(DEFAULT_RUNTIME_SETTINGS);
           break;
         case 'config':
           setInitialPrompt(msg.initialPrompt);
+          break;
+        case 'settings':
+          setRuntimeSettings(msg.settings);
           break;
         case 'meta':
           setSessionMeta(msg.meta);
@@ -181,6 +191,12 @@ export function useWebSocket() {
     [send],
   );
 
+  const updateSettings = useCallback(
+    (settings: (ClientMessage & { type: 'update_settings' })['settings']) =>
+      send({ type: 'update_settings', settings }),
+    [send],
+  );
+
   return {
     entries,
     sessionMeta,
@@ -191,11 +207,13 @@ export function useWebSocket() {
     events,
     travelHistory,
     initialPrompt,
+    runtimeSettings,
     startAgent,
     sendMessage,
     interrupt,
     abort,
     resetSession,
     selectSession,
+    updateSettings,
   };
 }

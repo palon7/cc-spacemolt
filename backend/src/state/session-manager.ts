@@ -4,7 +4,14 @@ import { FileLogger } from '../logger/file-logger.js';
 import { debug } from '../logger/debug-logger.js';
 import { getContextWindow } from '../utils/context-window.js';
 import { replaySession } from './session-history.js';
-import type { ParsedEntry, AgentStatus, SessionMeta } from '../state/types.js';
+import type {
+  ParsedEntry,
+  AgentStatus,
+  SessionMeta,
+  AutoResumeState,
+  RuntimeSettings,
+} from '../state/types.js';
+import type { AutoResumeConfig } from '../config.js';
 import consola from 'consola';
 
 export interface SessionManagerCallbacks {
@@ -14,6 +21,7 @@ export interface SessionManagerCallbacks {
   onClearStreaming: () => void;
   onError: (message: string) => void;
   onSessionStarted?: (sessionId: string) => void;
+  onSettingsChange?: (settings: RuntimeSettings) => void;
 }
 
 export class SessionManager {
@@ -27,6 +35,17 @@ export class SessionManager {
   private callbacks: SessionManagerCallbacks | null = null;
   private isResuming = false;
 
+  // Auto-resume state
+  private autoResumeConfig: AutoResumeConfig;
+  private autoResumeEnabled: boolean;
+  private autoResumeTimeoutMinutes: number;
+  private autoResumeStartedAt: Date | null = null;
+  private autoResumeStopping = false;
+  private autoResumeTimer: ReturnType<typeof setTimeout> | null = null;
+  private timeoutTimer: ReturnType<typeof setTimeout> | null = null;
+  private forceStopTimer: ReturnType<typeof setTimeout> | null = null;
+  private consecutiveErrors = 0;
+
   get status(): AgentStatus {
     return this._status;
   }
@@ -39,15 +58,68 @@ export class SessionManager {
     return this.entries;
   }
 
-  constructor(provider: AgentProvider, maxLogEntries: number, logDir: string) {
+  constructor(
+    provider: AgentProvider,
+    maxLogEntries: number,
+    logDir: string,
+    autoResumeConfig: AutoResumeConfig,
+  ) {
     this.provider = provider;
     this.maxLogEntries = maxLogEntries;
     this.logDir = logDir;
+    this.autoResumeConfig = autoResumeConfig;
+    this.autoResumeEnabled = autoResumeConfig.enabled;
+    this.autoResumeTimeoutMinutes = autoResumeConfig.timeoutMinutes;
   }
 
   setCallbacks(callbacks: SessionManagerCallbacks): void {
     this.callbacks = callbacks;
   }
+
+  // ---------------------------------------------------------------------------
+  // Auto-resume public API
+  // ---------------------------------------------------------------------------
+
+  getAutoResumeState(): AutoResumeState {
+    return {
+      enabled: this.autoResumeEnabled,
+      timeoutMinutes: this.autoResumeTimeoutMinutes,
+      startedAt: this.autoResumeStartedAt?.toISOString() ?? null,
+      stopping: this.autoResumeStopping,
+    };
+  }
+
+  getRuntimeSettings(): RuntimeSettings {
+    return { autoResume: this.getAutoResumeState() };
+  }
+
+  setAutoResume(enabled: boolean, timeoutMinutes?: number): void {
+    this.autoResumeEnabled = enabled;
+    if (timeoutMinutes !== undefined) {
+      this.autoResumeTimeoutMinutes = timeoutMinutes;
+    }
+
+    if (enabled) {
+      if (!this.autoResumeStartedAt) {
+        this.autoResumeStartedAt = new Date();
+      }
+      this.startTimeoutTimer();
+      this.broadcastSettings();
+      // If agent is already done, kick off auto-resume
+      if (this._status === 'done') {
+        this.scheduleAutoResume();
+      }
+    } else {
+      this.clearAllAutoResumeTimers();
+      this.autoResumeStartedAt = null;
+      this.autoResumeStopping = false;
+      this.broadcastSettings();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Session lifecycle
+  // ---------------------------------------------------------------------------
 
   async start(initialPrompt?: string): Promise<void> {
     this.setStatus('starting');
@@ -61,6 +133,7 @@ export class SessionManager {
 
   interrupt(): void {
     this.isResuming = true;
+    this.clearAllAutoResumeTimers();
     this.provider.interrupt();
   }
 
@@ -77,6 +150,12 @@ export class SessionManager {
 
   async resume(message?: string): Promise<void> {
     this.isResuming = false;
+
+    // Cancel pending auto-resume timer — manual action takes priority
+    if (this.autoResumeTimer) {
+      clearTimeout(this.autoResumeTimer);
+      this.autoResumeTimer = null;
+    }
 
     // Ensure provider knows which session to resume
     const resumeId = this.sessionMeta?.sessionId || this.provider.sessionId;
@@ -96,6 +175,7 @@ export class SessionManager {
   abort(): void {
     this.provider.abort();
     this.logger.close();
+    this.disableAutoResume();
   }
 
   async loadFromHistory(sessionId: string): Promise<void> {
@@ -140,6 +220,7 @@ export class SessionManager {
     this.entries = [];
     this.sessionMeta = null;
     this.isResuming = false;
+    this.disableAutoResume();
     this.setStatus('idle');
   }
 
@@ -161,6 +242,7 @@ export class SessionManager {
         this.setStatus('interrupted');
       } else {
         this.setStatus('done');
+        this.scheduleAutoResume();
       }
     } catch (err) {
       debug('session-manager', `provider.start() rejected: ${err}`);
@@ -168,7 +250,9 @@ export class SessionManager {
       if (this.isResuming) {
         this.setStatus('interrupted');
       } else {
+        this.consecutiveErrors++;
         this.setStatus('done');
+        this.scheduleAutoResume();
       }
     }
   }
@@ -196,6 +280,7 @@ export class SessionManager {
 
     if (entry.kind === 'system') {
       debug('session-manager', `Received system entry, sessionId=${entry.sessionId}`);
+      this.consecutiveErrors = 0;
       const prev = this.sessionMeta;
       this.sessionMeta = {
         sessionId: entry.sessionId,
@@ -339,5 +424,154 @@ export class SessionManager {
   private setStatus(status: AgentStatus): void {
     this._status = status;
     this.callbacks?.onStatus(status);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auto-resume internals
+  // ---------------------------------------------------------------------------
+
+  private scheduleAutoResume(): void {
+    if (!this.autoResumeEnabled) return;
+
+    // Timeout message was sent and agent completed gracefully
+    if (this.autoResumeStopping) {
+      if (this.forceStopTimer) {
+        clearTimeout(this.forceStopTimer);
+        this.forceStopTimer = null;
+      }
+      this.autoResumeStopping = false;
+      this.autoResumeEnabled = false;
+      this.autoResumeStartedAt = null;
+      this.clearAllAutoResumeTimers();
+      this.broadcastSettings();
+      debug('auto-resume', 'Agent completed after timeout message — auto-resume disabled');
+      return;
+    }
+
+    // Too many consecutive errors
+    if (this.consecutiveErrors >= 3) {
+      this.autoResumeEnabled = false;
+      this.autoResumeStartedAt = null;
+      this.clearAllAutoResumeTimers();
+      this.broadcastSettings();
+      debug('auto-resume', 'Disabled due to 3 consecutive errors');
+      return;
+    }
+
+    // Timeout already exceeded (fallback for when timeoutTimer didn't fire mid-run)
+    if (
+      this.autoResumeTimeoutMinutes > 0 &&
+      this.autoResumeStartedAt &&
+      Date.now() - this.autoResumeStartedAt.getTime() >= this.autoResumeTimeoutMinutes * 60_000
+    ) {
+      this.autoResumeEnabled = false;
+      this.autoResumeStartedAt = null;
+      this.clearAllAutoResumeTimers();
+      this.broadcastSettings();
+      debug('auto-resume', 'Timeout exceeded at completion — auto-resume disabled');
+      return;
+    }
+
+    // First auto-resume — start tracking time
+    if (!this.autoResumeStartedAt) {
+      this.autoResumeStartedAt = new Date();
+      this.startTimeoutTimer();
+      this.broadcastSettings();
+    }
+
+    debug('auto-resume', 'Scheduling auto-resume in 3 seconds');
+    this.autoResumeTimer = setTimeout(() => {
+      this.autoResumeTimer = null;
+      debug('auto-resume', `Resuming with: "${this.autoResumeConfig.message}"`);
+      this.resume(this.autoResumeConfig.message).catch((err) => {
+        debug('auto-resume', `Resume failed: ${err}`);
+      });
+    }, 3000);
+  }
+
+  private startTimeoutTimer(): void {
+    if (this.timeoutTimer) {
+      clearTimeout(this.timeoutTimer);
+      this.timeoutTimer = null;
+    }
+
+    if (this.autoResumeTimeoutMinutes <= 0 || !this.autoResumeStartedAt) return;
+
+    const remaining =
+      this.autoResumeStartedAt.getTime() + this.autoResumeTimeoutMinutes * 60_000 - Date.now();
+
+    if (remaining <= 0) {
+      this.handleTimeout();
+      return;
+    }
+
+    debug('auto-resume', `Timeout timer set for ${Math.round(remaining / 1000)}s`);
+    this.timeoutTimer = setTimeout(() => {
+      this.timeoutTimer = null;
+      this.handleTimeout();
+    }, remaining);
+  }
+
+  private handleTimeout(): void {
+    // Cancel pending auto-resume
+    if (this.autoResumeTimer) {
+      clearTimeout(this.autoResumeTimer);
+      this.autoResumeTimer = null;
+    }
+
+    if (this._status === 'running' || this._status === 'starting') {
+      // Agent is executing — send timeout message directly
+      this.autoResumeStopping = true;
+      this.broadcastSettings();
+      debug('auto-resume', 'Timeout reached — sending timeout message to running agent');
+      this.sendMessage(this.autoResumeConfig.timeoutMessage);
+      this.forceStopTimer = setTimeout(() => {
+        this.forceStopTimer = null;
+        this.handleForceStop();
+      }, this.autoResumeConfig.forceStopDelaySeconds * 1000);
+    } else {
+      // Agent is already stopped — just disable auto-resume
+      this.autoResumeEnabled = false;
+      this.autoResumeStartedAt = null;
+      this.broadcastSettings();
+      debug('auto-resume', 'Timeout reached while agent not running — auto-resume disabled');
+    }
+  }
+
+  private handleForceStop(): void {
+    debug('auto-resume', 'Force-stopping agent after timeout grace period');
+    this.autoResumeEnabled = false;
+    this.autoResumeStopping = false;
+    this.autoResumeStartedAt = null;
+    this.clearAllAutoResumeTimers();
+    this.broadcastSettings();
+    this.interrupt();
+  }
+
+  private clearAllAutoResumeTimers(): void {
+    if (this.autoResumeTimer) {
+      clearTimeout(this.autoResumeTimer);
+      this.autoResumeTimer = null;
+    }
+    if (this.timeoutTimer) {
+      clearTimeout(this.timeoutTimer);
+      this.timeoutTimer = null;
+    }
+    if (this.forceStopTimer) {
+      clearTimeout(this.forceStopTimer);
+      this.forceStopTimer = null;
+    }
+  }
+
+  private disableAutoResume(): void {
+    this.clearAllAutoResumeTimers();
+    this.autoResumeEnabled = false;
+    this.autoResumeStopping = false;
+    this.autoResumeStartedAt = null;
+    this.broadcastSettings();
+  }
+
+  private broadcastSettings(): void {
+    this.callbacks?.onSettingsChange?.(this.getRuntimeSettings());
   }
 }

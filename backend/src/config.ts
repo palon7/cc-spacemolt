@@ -16,6 +16,34 @@ export interface McpServerConfig {
   headers?: Record<string, string>;
 }
 
+export interface AutoResumeConfig {
+  enabled: boolean;
+  message: string;
+  timeoutMinutes: number;
+  timeoutMessage: string;
+  forceStopDelaySeconds: number;
+}
+
+export const DEFAULT_AUTO_RESUME_CONFIG: AutoResumeConfig = {
+  enabled: false,
+  message: 'continue playing.',
+  timeoutMinutes: 0,
+  timeoutMessage: 'Time limit reached. Please save your progress and end the game session.',
+  forceStopDelaySeconds: 180,
+};
+
+export function resolveAutoResumeConfig(partial?: Partial<AutoResumeConfig>): AutoResumeConfig {
+  if (!partial) return { ...DEFAULT_AUTO_RESUME_CONFIG };
+  return {
+    enabled: partial.enabled ?? DEFAULT_AUTO_RESUME_CONFIG.enabled,
+    message: partial.message ?? DEFAULT_AUTO_RESUME_CONFIG.message,
+    timeoutMinutes: partial.timeoutMinutes ?? DEFAULT_AUTO_RESUME_CONFIG.timeoutMinutes,
+    timeoutMessage: partial.timeoutMessage ?? DEFAULT_AUTO_RESUME_CONFIG.timeoutMessage,
+    forceStopDelaySeconds:
+      partial.forceStopDelaySeconds ?? DEFAULT_AUTO_RESUME_CONFIG.forceStopDelaySeconds,
+  };
+}
+
 export interface AppConfig {
   /** Initial prompt sent to the agent on startup */
   initialPrompt: string;
@@ -61,6 +89,9 @@ export interface AppConfig {
 
   /** Environment variables applied when launching the Claude CLI process */
   claudeEnv?: Record<string, string>;
+
+  /** Auto-resume settings for infinite execution */
+  autoResume?: Partial<AutoResumeConfig>;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -191,5 +222,8 @@ function mergeConfig(defaults: AppConfig, partial: Partial<AppConfig>): AppConfi
     claudeEnv: partial.claudeEnv
       ? { ...defaults.claudeEnv, ...partial.claudeEnv }
       : defaults.claudeEnv,
+    autoResume: partial.autoResume
+      ? { ...defaults.autoResume, ...partial.autoResume }
+      : defaults.autoResume,
   };
 }

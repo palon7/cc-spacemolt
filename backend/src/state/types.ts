@@ -22,5 +22,7 @@ export type {
   PlayerState,
   ShipModule,
   SessionSummary,
+  AutoResumeState,
+  RuntimeSettings,
 } from '@cc-spacemolt/shared';
 export { MAX_GAME_EVENTS } from '@cc-spacemolt/shared';

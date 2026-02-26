@@ -3,10 +3,12 @@ import type {
   ParsedEntry,
   SessionMeta,
   AgentStatus,
+  ClientMessage,
   GameState,
   GameEvent,
   GameConnectionStatus,
   TravelHistoryEntry,
+  RuntimeSettings,
 } from '@cc-spacemolt/shared';
 import { TopBar } from './TopBar';
 import { MobileTabBar, type TabKey } from './MobileTabBar';
@@ -25,11 +27,13 @@ interface LayoutProps {
   events: GameEvent[];
   travelHistory: TravelHistoryEntry[];
   initialPrompt: string;
+  runtimeSettings: RuntimeSettings;
   startAgent: (instructions?: string) => void;
   sendMessage: (text: string) => void;
   interrupt: () => void;
   resetSession: () => void;
   selectSession: (sessionId: string) => void;
+  updateSettings: (settings: (ClientMessage & { type: 'update_settings' })['settings']) => void;
 }
 
 export function Layout({
@@ -42,11 +46,13 @@ export function Layout({
   events,
   travelHistory,
   initialPrompt,
+  runtimeSettings,
   startAgent,
   sendMessage,
   interrupt,
   resetSession,
   selectSession,
+  updateSettings,
 }: LayoutProps) {
   const [mobileTab, setMobileTab] = useState<TabKey>('claude');
   const [showDetail, setShowDetail] = useState(false);
@@ -79,11 +85,13 @@ export function Layout({
               status={status}
               connected={connected}
               initialPrompt={initialPrompt}
+              runtimeSettings={runtimeSettings}
               startAgent={startAgent}
               sendMessage={sendMessage}
               interrupt={interrupt}
               resetSession={resetSession}
               selectSession={selectSession}
+              updateSettings={updateSettings}
             />
           </div>
           <div className="col-span-4 bg-zinc-900 overflow-hidden">
@@ -112,11 +120,13 @@ export function Layout({
               status={status}
               connected={connected}
               initialPrompt={initialPrompt}
+              runtimeSettings={runtimeSettings}
               startAgent={startAgent}
               sendMessage={sendMessage}
               interrupt={interrupt}
               resetSession={resetSession}
               selectSession={selectSession}
+              updateSettings={updateSettings}
             />
           )}
           {mobileTab === 'events' && <EventsPanel events={events} />}

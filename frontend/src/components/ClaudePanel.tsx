@@ -1,8 +1,15 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import type { ParsedEntry, SessionMeta, AgentStatus, ToolResultEntry } from '@cc-spacemolt/shared';
+import type {
+  ParsedEntry,
+  SessionMeta,
+  AgentStatus,
+  ClientMessage,
+  ToolResultEntry,
+  RuntimeSettings,
+} from '@cc-spacemolt/shared';
 import { useStickToBottom } from '../hooks/useStickToBottom';
 import { useSessionList } from '../hooks/useSessionList';
-import { LuSend, LuSquare, LuArrowDown, LuClock, LuPlus } from 'react-icons/lu';
+import { LuSend, LuSquare, LuArrowDown, LuClock, LuPlus, LuChevronDown } from 'react-icons/lu';
 import { EntryRenderer } from './messages/EntryRenderer';
 import { SessionHistoryModal } from './SessionHistoryModal';
 import { SessionCard } from './common/SessionCard';
@@ -11,6 +18,8 @@ import { PanelHeaderButton } from './common/PanelHeaderButton';
 import { IconButton } from './common/IconButton';
 import { ActionButton } from './common/ActionButton';
 import { PanelInput, PanelTextarea } from './common/PanelInput';
+import { Dropdown, type DropdownOption } from './common/Dropdown';
+import { formatDuration } from '../utils/format';
 
 function StatusBadge({
   color,
@@ -41,11 +50,40 @@ interface ClaudePanelProps {
   status: AgentStatus;
   connected: boolean;
   initialPrompt: string;
+  runtimeSettings: RuntimeSettings;
   startAgent: (instructions?: string) => void;
   sendMessage: (text: string) => void;
   interrupt: () => void;
   resetSession: () => void;
   selectSession: (sessionId: string) => void;
+  updateSettings: (settings: (ClientMessage & { type: 'update_settings' })['settings']) => void;
+}
+
+type AutoResumeDropdownValue = 'off' | '0' | '30' | '60' | '180' | '360';
+
+const AUTO_RESUME_OPTIONS: DropdownOption<AutoResumeDropdownValue>[] = [
+  { value: 'off', label: 'OFF' },
+  { value: '0', label: 'No limit', description: 'Run forever' },
+  { value: '30', label: '30 min' },
+  { value: '60', label: '1 hour' },
+  { value: '180', label: '3 hours' },
+  { value: '360', label: '6 hours' },
+];
+
+function useRemainingTime(startedAt: string | null, timeoutMinutes: number): string | null {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!startedAt || timeoutMinutes <= 0) return;
+    const id = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, [startedAt, timeoutMinutes]);
+
+  if (!startedAt || timeoutMinutes <= 0) return null;
+  const elapsed = Date.now() - new Date(startedAt).getTime();
+  const remaining = timeoutMinutes * 60_000 - elapsed;
+  if (remaining <= 0) return null;
+  return formatDuration(remaining);
 }
 
 export function ClaudePanel({
@@ -54,11 +92,13 @@ export function ClaudePanel({
   status,
   connected,
   initialPrompt,
+  runtimeSettings,
   startAgent,
   sendMessage,
   interrupt,
   resetSession,
   selectSession,
+  updateSettings,
 }: ClaudePanelProps) {
   const [input, setInput] = useState('');
   const [instructions, setInstructions] = useState('');
@@ -130,6 +170,24 @@ export function ClaudePanel({
   const isRunning = status === 'running' || status === 'starting';
   const supportsInput = sessionMeta?.supportsInput ?? true;
   const isCompacting = sessionMeta?.isCompacting ?? false;
+
+  const { autoResume } = runtimeSettings;
+  const remaining = useRemainingTime(autoResume.startedAt, autoResume.timeoutMinutes);
+
+  const autoResumeValue: AutoResumeDropdownValue = !autoResume.enabled
+    ? 'off'
+    : (String(autoResume.timeoutMinutes) as AutoResumeDropdownValue);
+
+  const handleAutoResumeChange = useCallback(
+    (value: AutoResumeDropdownValue) => {
+      if (value === 'off') {
+        updateSettings({ autoResume: { enabled: false } });
+      } else {
+        updateSettings({ autoResume: { enabled: true, timeoutMinutes: Number(value) } });
+      }
+    },
+    [updateSettings],
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -258,6 +316,38 @@ export function ClaudePanel({
           </button>
         )}
       </div>
+
+      {/* Auto-resume settings bar */}
+      {status !== 'idle' && status !== 'error' && (
+        <div className="shrink-0 flex items-center justify-between px-3 sm:px-4 py-1.5 border-t border-zinc-800/60 bg-zinc-900/50">
+          <Dropdown
+            options={AUTO_RESUME_OPTIONS}
+            value={autoResumeValue}
+            onChange={handleAutoResumeChange}
+            disabled={!connected}
+            renderTrigger={({ option, isOpen }) => (
+              <span
+                className={`flex items-center gap-1 text-xs transition-colors cursor-pointer ${
+                  autoResume.enabled
+                    ? 'text-amber-400 hover:text-amber-300'
+                    : 'text-zinc-600 hover:text-zinc-400'
+                }`}
+              >
+                <span className="font-medium">
+                  {autoResume.stopping ? 'Shutting down...' : `Auto ${option.label}`}
+                </span>
+                <LuChevronDown
+                  size={11}
+                  className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </span>
+            )}
+          />
+          {autoResume.enabled && remaining && !autoResume.stopping && (
+            <span className="text-xs text-zinc-600 tabular-nums">{remaining}</span>
+          )}
+        </div>
+      )}
 
       {/* Input area */}
       {status !== 'error' && (

@@ -2,7 +2,13 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { loadConfig, applyCliOverrides, DEFAULT_CONFIG } from './config.js';
+import {
+  loadConfig,
+  applyCliOverrides,
+  DEFAULT_CONFIG,
+  resolveAutoResumeConfig,
+  DEFAULT_AUTO_RESUME_CONFIG,
+} from './config.js';
 import type { CommandLineOptions } from './utils/command-line.js';
 import type { AppConfig } from './config.js';
 
@@ -35,6 +41,25 @@ function makeCliOptions(overrides: Partial<CommandLineOptions> = {}): CommandLin
   };
 }
 
+describe('resolveAutoResumeConfig', () => {
+  it('returns all defaults when called with undefined', () => {
+    expect(resolveAutoResumeConfig()).toEqual(DEFAULT_AUTO_RESUME_CONFIG);
+  });
+
+  it('returns all defaults when called with empty object', () => {
+    expect(resolveAutoResumeConfig({})).toEqual(DEFAULT_AUTO_RESUME_CONFIG);
+  });
+
+  it('merges partial config over defaults', () => {
+    const result = resolveAutoResumeConfig({ enabled: true, timeoutMinutes: 60 });
+    expect(result.enabled).toBe(true);
+    expect(result.timeoutMinutes).toBe(60);
+    expect(result.message).toBe(DEFAULT_AUTO_RESUME_CONFIG.message);
+    expect(result.timeoutMessage).toBe(DEFAULT_AUTO_RESUME_CONFIG.timeoutMessage);
+    expect(result.forceStopDelaySeconds).toBe(DEFAULT_AUTO_RESUME_CONFIG.forceStopDelaySeconds);
+  });
+});
+
 describe('loadConfig', () => {
   it('returns defaults for empty config', () => {
     const config = loadConfig(createTempConfig({}));
@@ -52,6 +77,11 @@ describe('loadConfig', () => {
   it('merges claudeEnv with defaults', () => {
     const config = loadConfig(createTempConfig({ claudeEnv: { FOO: 'bar' } }));
     expect(config.claudeEnv).toEqual({ FOO: 'bar' });
+  });
+
+  it('merges autoResume partial config', () => {
+    const config = loadConfig(createTempConfig({ autoResume: { enabled: true } }));
+    expect(config.autoResume).toEqual({ enabled: true });
   });
 });
 

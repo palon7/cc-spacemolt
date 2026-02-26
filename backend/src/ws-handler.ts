@@ -10,6 +10,7 @@ import type {
   ParsedEntry,
   SessionMeta,
   AgentStatus,
+  RuntimeSettings,
   TravelHistoryEntry,
 } from './state/types.js';
 import type { GameConnectionManager } from './game/game-connection-manager.js';
@@ -60,6 +61,7 @@ export function setupWebSocket({
     },
     onClearStreaming: () => broadcast(wss, { type: 'clear_streaming' }),
     onError: (message: string) => broadcast(wss, { type: 'error', message }),
+    onSettingsChange: (settings: RuntimeSettings) => broadcast(wss, { type: 'settings', settings }),
     onSessionStarted: (sessionId: string) => {
       gameConnectionManager.setSessionDir(path.join(logDir, sessionId), sessionId);
     },
@@ -87,6 +89,9 @@ export function setupWebSocket({
 
     // Send config (initialPrompt for UI placeholder)
     send(ws, { type: 'config', initialPrompt });
+
+    // Send runtime settings (auto-resume state, etc.)
+    send(ws, { type: 'settings', settings: sessionManager.getRuntimeSettings() });
 
     // Send current state to newly connected client
     const meta = sessionManager.currentMeta;
@@ -164,6 +169,14 @@ export function setupWebSocket({
             send(ws, { type: 'error', message: 'Cannot switch session while active' });
           } else {
             selectSession(wss, sessionManager, gameConnectionManager, logDir, msg.sessionId);
+          }
+          break;
+        case 'update_settings':
+          if (msg.settings.autoResume) {
+            sessionManager.setAutoResume(
+              msg.settings.autoResume.enabled,
+              msg.settings.autoResume.timeoutMinutes,
+            );
           }
           break;
       }
