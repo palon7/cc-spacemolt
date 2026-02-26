@@ -1,19 +1,14 @@
 import type { TextEntry } from '@cc-spacemolt/shared';
+import { useConfig } from '../../contexts/ConfigContext';
 import { MarkdownContent } from '../common/MarkdownContent';
 import { Avatar } from '../common/Avatar';
 import { MessageHeader } from './MessageHeader';
 
-export function TextMessage({
-  entry,
-  name,
-  avatarUrl,
-}: {
-  entry: TextEntry;
-  name?: string;
-  avatarUrl?: string;
-}) {
+export function TextMessage({ entry, name }: { entry: TextEntry; name?: string }) {
+  const { agentAvatarUrl } = useConfig();
+
   const icon = (
-    <Avatar url={avatarUrl} initial="C" gradientClasses="from-orange-400 to-amber-600" />
+    <Avatar url={agentAvatarUrl} initial="C" gradientClasses="from-orange-400 to-amber-600" />
   );
 
   return (

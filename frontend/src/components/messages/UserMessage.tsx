@@ -1,21 +1,15 @@
 import type { UserMessageEntry } from '@cc-spacemolt/shared';
+import { useConfig } from '../../contexts/ConfigContext';
 import { Avatar } from '../common/Avatar';
 import { MessageHeader } from './MessageHeader';
 
-export function UserMessage({
-  entry,
-  name,
-  avatarUrl,
-}: {
-  entry: UserMessageEntry;
-  name?: string;
-  avatarUrl?: string;
-}) {
-  const displayName = name ?? 'User';
+export function UserMessage({ entry }: { entry: UserMessageEntry }) {
+  const { userName, userAvatarUrl } = useConfig();
+  const displayName = userName ?? 'User';
   const initial = displayName[0]?.toUpperCase() ?? 'U';
 
   const icon = (
-    <Avatar url={avatarUrl} initial={initial} gradientClasses="from-sky-400 to-blue-600" />
+    <Avatar url={userAvatarUrl} initial={initial} gradientClasses="from-sky-400 to-blue-600" />
   );
 
   return (
