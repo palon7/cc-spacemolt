@@ -139,6 +139,9 @@ async function main() {
     initialPrompt: config.initialPrompt,
     gameData,
     logDir,
+    workspacePath,
+    userName: config.userName,
+    userAvatarPath: config.userAvatarPath,
   });
 
   // Graceful shutdown

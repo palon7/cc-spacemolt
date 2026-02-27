@@ -101,6 +101,7 @@ cc-spacemolt/
     utils/                   — helpers (truncate, format, env, context-window)
   frontend/src/
     hooks/                   — useWebSocket (all state management), useMapData, useStickToBottom
+    contexts/                — React Contexts: AgentContext, GameContext, ConfigContext
     components/              — Layout, 3 panels (ShipPanel, ClaudePanel, EventsPanel), StarMap, etc.
     components/messages/     — per-message-type rendering (Text, Thinking, ToolCall, SpacemoltTool, etc.)
     components/common/       — shared UI (GaugeBar, Chip, Icons, MarkdownContent)
@@ -121,7 +122,7 @@ cc-spacemolt/
 - **Memory management**: Drop old entries from memory when count exceeds `maxLogEntries` (default 1000). All entries are still written to log files.
 - **3-panel dashboard**: 12-column grid — Ship (col-span-3) / Claude Code (col-span-5) / Events (col-span-4). Mobile uses tab switching. Dark theme (zinc color palette).
 - **Canvas star map**: Rendered in a `requestAnimationFrame` loop. LERP-interpolated camera movement, current-location highlight, movement animation, drag and zoom support.
-- **Single-hook state management**: `useWebSocket` manages all application state. No external state library; state is passed down via props.
+- **State management**: `useWebSocket` manages all application state. `App` distributes it into three React Contexts — `AgentContext` (entries, status, connected, callbacks), `GameContext` (gameState, gameStatus, events, travelHistory), `ConfigContext` (agentAvatarUrl, userName, userAvatarUrl, initialPrompt). Components consume contexts directly via `useAgent()`, `useGame()`, `useConfig()`. No external state library.
 - **shared type composite reference**: `shared/tsconfig.json` uses `composite: true`. After adding types, regenerate declaration files with `npx tsc --build shared/tsconfig.json`.
 
 ### CLI Options

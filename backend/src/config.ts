@@ -92,6 +92,12 @@ export interface AppConfig {
 
   /** Auto-resume settings for infinite execution */
   autoResume?: Partial<AutoResumeConfig>;
+
+  /** Display name for the human operator (shown in UserMessage) */
+  userName?: string;
+
+  /** Path to an avatar image for the human operator (shown in UserMessage) */
+  userAvatarPath?: string;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -179,12 +185,18 @@ export function applyCliOverrides(
   const claudeArgs =
     cliClaudeArgs.length > 0 ? [...(config.claudeArgs ?? []), ...cliClaudeArgs] : config.claudeArgs;
 
+  // Resolve userAvatarPath relative to workspacePath when it's a relative path
+  const userAvatarPath = config.userAvatarPath
+    ? path.resolve(workspacePath, config.userAvatarPath)
+    : undefined;
+
   return {
     config: {
       ...config,
       workspacePath,
       claudeEnv,
       claudeArgs,
+      userAvatarPath,
     },
     workspacePath,
     logDir,
@@ -225,5 +237,7 @@ function mergeConfig(defaults: AppConfig, partial: Partial<AppConfig>): AppConfi
     autoResume: partial.autoResume
       ? { ...defaults.autoResume, ...partial.autoResume }
       : defaults.autoResume,
+    userName: partial.userName ?? defaults.userName,
+    userAvatarPath: partial.userAvatarPath ?? defaults.userAvatarPath,
   };
 }

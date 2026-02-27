@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 import fsp from 'fs/promises';
 import { WebSocketServer, WebSocket } from 'ws';
 import type { IncomingMessage } from 'http';
@@ -37,6 +38,9 @@ export interface WsHandlerOptions {
   gameConnectionManager: GameConnectionManager;
   initialPrompt: string;
   logDir: string;
+  workspacePath: string;
+  userName?: string;
+  userAvatarPath?: string;
 }
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -47,6 +51,9 @@ export function setupWebSocket({
   gameConnectionManager,
   initialPrompt,
   logDir,
+  workspacePath,
+  userName,
+  userAvatarPath,
 }: WsHandlerOptions): void {
   const wss = new WebSocketServer({ server: server as never });
 
@@ -87,8 +94,21 @@ export function setupWebSocket({
 
     debug('ws', 'Client connected');
 
-    // Send config (initialPrompt for UI placeholder)
-    send(ws, { type: 'config', initialPrompt });
+    // Resolve profile info for config message
+    const agentAvatarUrl = fs.existsSync(path.join(workspacePath, 'avatar.png'))
+      ? '/api/agent-avatar'
+      : undefined;
+    const resolvedUserName = userName || undefined;
+    const userAvatarUrl =
+      userAvatarPath && fs.existsSync(userAvatarPath) ? '/api/user-avatar' : undefined;
+
+    send(ws, {
+      type: 'config',
+      initialPrompt,
+      agentAvatarUrl,
+      userName: resolvedUserName,
+      userAvatarUrl,
+    });
 
     // Send runtime settings (auto-resume state, etc.)
     send(ws, { type: 'settings', settings: sessionManager.getRuntimeSettings() });

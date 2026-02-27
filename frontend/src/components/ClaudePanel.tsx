@@ -1,12 +1,8 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import type {
-  ParsedEntry,
-  SessionMeta,
-  AgentStatus,
-  ClientMessage,
-  ToolResultEntry,
-  RuntimeSettings,
-} from '@cc-spacemolt/shared';
+import type { ToolResultEntry } from '@cc-spacemolt/shared';
+import { useAgent } from '../contexts/AgentContext';
+import { useGame } from '../contexts/GameContext';
+import { useConfig } from '../contexts/ConfigContext';
 import { useStickToBottom } from '../hooks/useStickToBottom';
 import { useSessionList } from '../hooks/useSessionList';
 import { LuSend, LuSquare, LuArrowDown, LuClock, LuPlus, LuChevronDown } from 'react-icons/lu';
@@ -19,6 +15,7 @@ import { IconButton } from './common/IconButton';
 import { ActionButton } from './common/ActionButton';
 import { PanelInput, PanelTextarea } from './common/PanelInput';
 import { Dropdown, type DropdownOption } from './common/Dropdown';
+import { StatusLine } from './common/StatusLine';
 import { formatDuration } from '../utils/format';
 
 function StatusBadge({
@@ -42,21 +39,6 @@ function StatusBadge({
       <span className={`text-xs ${text} tracking-wider`}>{label}</span>
     </div>
   );
-}
-
-interface ClaudePanelProps {
-  entries: ParsedEntry[];
-  sessionMeta: SessionMeta | null;
-  status: AgentStatus;
-  connected: boolean;
-  initialPrompt: string;
-  runtimeSettings: RuntimeSettings;
-  startAgent: (instructions?: string) => void;
-  sendMessage: (text: string) => void;
-  interrupt: () => void;
-  resetSession: () => void;
-  selectSession: (sessionId: string) => void;
-  updateSettings: (settings: (ClientMessage & { type: 'update_settings' })['settings']) => void;
 }
 
 type AutoResumeDropdownValue = 'off' | '0' | '30' | '60' | '180' | '360';
@@ -86,20 +68,23 @@ function useRemainingTime(startedAt: string | null, timeoutMinutes: number): str
   return formatDuration(remaining);
 }
 
-export function ClaudePanel({
-  entries,
-  sessionMeta,
-  status,
-  connected,
-  initialPrompt,
-  runtimeSettings,
-  startAgent,
-  sendMessage,
-  interrupt,
-  resetSession,
-  selectSession,
-  updateSettings,
-}: ClaudePanelProps) {
+export function ClaudePanel() {
+  const {
+    entries,
+    sessionMeta,
+    status,
+    connected,
+    runtimeSettings,
+    startAgent,
+    sendMessage,
+    interrupt,
+    resetSession,
+    selectSession,
+    updateSettings,
+  } = useAgent();
+  const { gameState } = useGame();
+  const { initialPrompt } = useConfig();
+
   const [input, setInput] = useState('');
   const [instructions, setInstructions] = useState('');
   const [showHistory, setShowHistory] = useState(false);
@@ -122,7 +107,7 @@ export function ClaudePanel({
   }, [entries.length, onContentGrew]);
 
   // Also auto-scroll on streaming updates (same entry count but content changed)
-  const lastEntryRef = useRef<ParsedEntry | null>(null);
+  const lastEntryRef = useRef(entries[entries.length - 1]);
   useEffect(() => {
     const last = entries[entries.length - 1];
     if (last && last !== lastEntryRef.current) {
@@ -170,6 +155,7 @@ export function ClaudePanel({
   const isRunning = status === 'running' || status === 'starting';
   const supportsInput = sessionMeta?.supportsInput ?? true;
   const isCompacting = sessionMeta?.isCompacting ?? false;
+  const agentName = gameState?.player.username;
 
   const { autoResume } = runtimeSettings;
   const remaining = useRemainingTime(autoResume.startedAt, autoResume.timeoutMinutes);
@@ -277,26 +263,12 @@ export function ClaudePanel({
                 entry={entry}
                 toolResultMap={toolResultMap}
                 isFirstSystem={entry.id === firstSystemId}
+                agentName={agentName}
               />
             ));
           })()}
-          {status === 'starting' && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-amber-500">
-                <svg className="w-3 h-3 animate-spin" viewBox="0 0 12 12" fill="none">
-                  <circle
-                    cx="6"
-                    cy="6"
-                    r="5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeDasharray="20 10"
-                  />
-                </svg>
-              </span>
-              <span className="text-xs uppercase tracking-wider text-zinc-600">Starting...</span>
-            </div>
-          )}
+          {status === 'starting' && <StatusLine spinner color="amber" label="Starting..." />}
+          {isCompacting && <StatusLine spinner color="purple" label="Compacting..." />}
         </div>
 
         {/* Scroll-to-bottom pill */}

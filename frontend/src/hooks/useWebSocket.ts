@@ -27,6 +27,9 @@ export function useWebSocket() {
     status: 'connecting',
   });
   const [initialPrompt, setInitialPrompt] = useState('');
+  const [agentAvatarUrl, setAgentAvatarUrl] = useState<string | undefined>(undefined);
+  const [userName, setUserName] = useState<string | undefined>(undefined);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | undefined>(undefined);
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [travelHistory, setTravelHistory] = useState<TravelHistoryEntry[]>([]);
   const [runtimeSettings, setRuntimeSettings] = useState<RuntimeSettings>(DEFAULT_RUNTIME_SETTINGS);
@@ -114,6 +117,9 @@ export function useWebSocket() {
           break;
         case 'config':
           setInitialPrompt(msg.initialPrompt);
+          setAgentAvatarUrl(msg.agentAvatarUrl);
+          setUserName(msg.userName);
+          setUserAvatarUrl(msg.userAvatarUrl);
           break;
         case 'settings':
           setRuntimeSettings(msg.settings);
@@ -208,6 +214,9 @@ export function useWebSocket() {
     travelHistory,
     initialPrompt,
     runtimeSettings,
+    agentAvatarUrl,
+    userName,
+    userAvatarUrl,
     startAgent,
     sendMessage,
     interrupt,

@@ -1,15 +1,5 @@
 import { useState } from 'react';
-import type {
-  ParsedEntry,
-  SessionMeta,
-  AgentStatus,
-  ClientMessage,
-  GameState,
-  GameEvent,
-  GameConnectionStatus,
-  TravelHistoryEntry,
-  RuntimeSettings,
-} from '@cc-spacemolt/shared';
+import { useGame } from '../contexts/GameContext';
 import { TopBar } from './TopBar';
 import { MobileTabBar, type TabKey } from './MobileTabBar';
 import { ShipPanel } from './ShipPanel';
@@ -17,49 +7,14 @@ import { ShipDetailModal } from './ShipDetailModal';
 import { ClaudePanel } from './ClaudePanel';
 import { EventsPanel } from './EventsPanel';
 
-interface LayoutProps {
-  entries: ParsedEntry[];
-  sessionMeta: SessionMeta | null;
-  status: AgentStatus;
-  connected: boolean;
-  gameState: GameState | null;
-  gameStatus: { status: GameConnectionStatus; message?: string };
-  events: GameEvent[];
-  travelHistory: TravelHistoryEntry[];
-  initialPrompt: string;
-  runtimeSettings: RuntimeSettings;
-  startAgent: (instructions?: string) => void;
-  sendMessage: (text: string) => void;
-  interrupt: () => void;
-  resetSession: () => void;
-  selectSession: (sessionId: string) => void;
-  updateSettings: (settings: (ClientMessage & { type: 'update_settings' })['settings']) => void;
-}
-
-export function Layout({
-  entries,
-  sessionMeta,
-  status,
-  connected,
-  gameState,
-  gameStatus,
-  events,
-  travelHistory,
-  initialPrompt,
-  runtimeSettings,
-  startAgent,
-  sendMessage,
-  interrupt,
-  resetSession,
-  selectSession,
-  updateSettings,
-}: LayoutProps) {
+export function Layout() {
+  const { gameState, events, travelHistory } = useGame();
   const [mobileTab, setMobileTab] = useState<TabKey>('claude');
   const [showDetail, setShowDetail] = useState(false);
 
   return (
     <div className="h-dvh w-screen flex flex-col overflow-hidden">
-      <TopBar connected={connected} gameStatus={gameStatus} gameState={gameState} />
+      <TopBar />
       <MobileTabBar active={mobileTab} onChange={setMobileTab} />
 
       <div className="flex-1 overflow-hidden">
@@ -79,20 +34,7 @@ export function Layout({
             )}
           </div>
           <div className="col-span-5 bg-zinc-900 overflow-hidden">
-            <ClaudePanel
-              entries={entries}
-              sessionMeta={sessionMeta}
-              status={status}
-              connected={connected}
-              initialPrompt={initialPrompt}
-              runtimeSettings={runtimeSettings}
-              startAgent={startAgent}
-              sendMessage={sendMessage}
-              interrupt={interrupt}
-              resetSession={resetSession}
-              selectSession={selectSession}
-              updateSettings={updateSettings}
-            />
+            <ClaudePanel />
           </div>
           <div className="col-span-4 bg-zinc-900 overflow-hidden">
             <EventsPanel events={events} />
@@ -113,22 +55,7 @@ export function Layout({
                 Waiting for game data...
               </div>
             ))}
-          {mobileTab === 'claude' && (
-            <ClaudePanel
-              entries={entries}
-              sessionMeta={sessionMeta}
-              status={status}
-              connected={connected}
-              initialPrompt={initialPrompt}
-              runtimeSettings={runtimeSettings}
-              startAgent={startAgent}
-              sendMessage={sendMessage}
-              interrupt={interrupt}
-              resetSession={resetSession}
-              selectSession={selectSession}
-              updateSettings={updateSettings}
-            />
-          )}
+          {mobileTab === 'claude' && <ClaudePanel />}
           {mobileTab === 'events' && <EventsPanel events={events} />}
         </div>
       </div>

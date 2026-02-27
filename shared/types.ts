@@ -12,7 +12,8 @@ export type EntryKind =
   | 'tool_call'
   | 'tool_result'
   | 'user_message'
-  | 'result';
+  | 'result'
+  | 'notification';
 
 export interface BaseEntry {
   id: string;
@@ -72,6 +73,11 @@ export interface ResultEntry extends BaseEntry {
   errors?: string[];
 }
 
+export interface NotificationEntry extends BaseEntry {
+  kind: 'notification';
+  text: string;
+}
+
 export type ParsedEntry =
   | SystemEntry
   | ThinkingEntry
@@ -79,7 +85,8 @@ export type ParsedEntry =
   | ToolCallEntry
   | ToolResultEntry
   | UserMessageEntry
-  | ResultEntry;
+  | ResultEntry
+  | NotificationEntry;
 
 export type AgentStatus = 'idle' | 'starting' | 'running' | 'interrupted' | 'done' | 'error';
 
@@ -236,7 +243,13 @@ export type ClientMessage =
 export type ServerMessage =
   | { type: 'entry'; entry: ParsedEntry }
   | { type: 'meta'; meta: SessionMeta }
-  | { type: 'config'; initialPrompt: string }
+  | {
+      type: 'config';
+      initialPrompt: string;
+      agentAvatarUrl?: string;
+      userName?: string;
+      userAvatarUrl?: string;
+    }
   | { type: 'status'; status: AgentStatus }
   | { type: 'settings'; settings: RuntimeSettings }
   | { type: 'clear_streaming' }

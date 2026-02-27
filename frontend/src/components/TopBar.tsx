@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { GameState, GameConnectionStatus } from '@cc-spacemolt/shared';
+import type { GameConnectionStatus } from '@cc-spacemolt/shared';
+import { useAgent } from '../contexts/AgentContext';
+import { useGame } from '../contexts/GameContext';
 import { getVersion } from '../utils/version';
-
-interface TopBarProps {
-  connected: boolean;
-  gameStatus: { status: GameConnectionStatus; message?: string };
-  gameState: GameState | null;
-}
 
 const gameIndicator: Record<GameConnectionStatus, { dot: string; text: string; label: string }> = {
   connecting: {
@@ -31,7 +27,9 @@ const gameIndicator: Record<GameConnectionStatus, { dot: string; text: string; l
   },
 };
 
-export function TopBar({ connected, gameStatus, gameState }: TopBarProps) {
+export function TopBar() {
+  const { connected } = useAgent();
+  const { gameStatus, gameState } = useGame();
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
