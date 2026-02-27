@@ -5,6 +5,7 @@ import { ThinkingBlock } from './ThinkingBlock';
 import { ToolCallBlock } from './ToolCallBlock';
 import { UserMessage } from './UserMessage';
 import { ResultMessage } from './ResultMessage';
+import { StatusLine } from '../common/StatusLine';
 
 export function EntryRenderer({
   entry,
@@ -32,5 +33,7 @@ export function EntryRenderer({
       return <UserMessage entry={entry} />;
     case 'result':
       return <ResultMessage entry={entry} />;
+    case 'notification':
+      return <StatusLine label={entry.text} />;
   }
 }

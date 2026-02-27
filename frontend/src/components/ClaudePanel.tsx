@@ -14,6 +14,7 @@ import { PanelHeaderButton } from './common/PanelHeaderButton';
 import { IconButton } from './common/IconButton';
 import { ActionButton } from './common/ActionButton';
 import { PanelInput, PanelTextarea } from './common/PanelInput';
+import { StatusLine } from './common/StatusLine';
 
 function StatusBadge({
   color,
@@ -217,23 +218,8 @@ export function ClaudePanel() {
               />
             ));
           })()}
-          {status === 'starting' && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-amber-500">
-                <svg className="w-3 h-3 animate-spin" viewBox="0 0 12 12" fill="none">
-                  <circle
-                    cx="6"
-                    cy="6"
-                    r="5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeDasharray="20 10"
-                  />
-                </svg>
-              </span>
-              <span className="text-xs uppercase tracking-wider text-zinc-600">Starting...</span>
-            </div>
-          )}
+          {status === 'starting' && <StatusLine spinner color="amber" label="Starting..." />}
+          {isCompacting && <StatusLine spinner color="purple" label="Compacting..." />}
         </div>
 
         {/* Scroll-to-bottom pill */}

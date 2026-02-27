@@ -12,7 +12,8 @@ export type EntryKind =
   | 'tool_call'
   | 'tool_result'
   | 'user_message'
-  | 'result';
+  | 'result'
+  | 'notification';
 
 export interface BaseEntry {
   id: string;
@@ -72,6 +73,11 @@ export interface ResultEntry extends BaseEntry {
   errors?: string[];
 }
 
+export interface NotificationEntry extends BaseEntry {
+  kind: 'notification';
+  text: string;
+}
+
 export type ParsedEntry =
   | SystemEntry
   | ThinkingEntry
@@ -79,7 +85,8 @@ export type ParsedEntry =
   | ToolCallEntry
   | ToolResultEntry
   | UserMessageEntry
-  | ResultEntry;
+  | ResultEntry
+  | NotificationEntry;
 
 export type AgentStatus = 'idle' | 'starting' | 'running' | 'interrupted' | 'done' | 'error';
 
