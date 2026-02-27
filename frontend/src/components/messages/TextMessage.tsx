@@ -8,7 +8,11 @@ export function TextMessage({ entry, name }: { entry: TextEntry; name?: string }
   const { agentAvatarUrl } = useConfig();
 
   const icon = (
-    <Avatar url={agentAvatarUrl} initial="C" gradientClasses="from-orange-400 to-amber-600" />
+    <Avatar
+      url={agentAvatarUrl}
+      initial={name ? name[0] : 'A'}
+      gradientClasses="from-orange-400 to-amber-600"
+    />
   );
 
   return (
