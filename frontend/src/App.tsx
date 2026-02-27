@@ -15,6 +15,7 @@ export function App() {
     events,
     travelHistory,
     initialPrompt,
+    runtimeSettings,
     agentAvatarUrl,
     userName,
     userAvatarUrl,
@@ -24,6 +25,7 @@ export function App() {
     abort,
     resetSession,
     selectSession,
+    updateSettings,
   } = useWebSocket();
 
   return (
@@ -33,12 +35,14 @@ export function App() {
         sessionMeta,
         status,
         connected,
+        runtimeSettings,
         startAgent,
         sendMessage,
         interrupt,
         abort,
         resetSession,
         selectSession,
+        updateSettings,
       }}
     >
       <GameContext.Provider value={{ gameState, gameStatus, events, travelHistory }}>

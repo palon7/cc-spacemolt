@@ -207,6 +207,21 @@ export interface SessionSummary {
 }
 
 // ---------------------------------------------------------------------------
+// Runtime settings (mutable state synced between backend and frontend)
+// ---------------------------------------------------------------------------
+
+export interface AutoResumeState {
+  enabled: boolean;
+  timeoutMinutes: number;
+  startedAt: string | null;
+  stopping: boolean;
+}
+
+export interface RuntimeSettings {
+  autoResume: AutoResumeState;
+}
+
+// ---------------------------------------------------------------------------
 // WebSocket protocol messages
 // ---------------------------------------------------------------------------
 
@@ -218,7 +233,11 @@ export type ClientMessage =
   | { type: 'reset' }
   | { type: 'interrupt' }
   | { type: 'abort' }
-  | { type: 'select_session'; sessionId: string };
+  | { type: 'select_session'; sessionId: string }
+  | {
+      type: 'update_settings';
+      settings: { autoResume?: { enabled: boolean; timeoutMinutes?: number } };
+    };
 
 /** Server -> Client */
 export type ServerMessage =
@@ -232,6 +251,7 @@ export type ServerMessage =
       userAvatarUrl?: string;
     }
   | { type: 'status'; status: AgentStatus }
+  | { type: 'settings'; settings: RuntimeSettings }
   | { type: 'clear_streaming' }
   | { type: 'reset' }
   | { type: 'state_update'; state: GameState }
