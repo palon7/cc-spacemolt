@@ -109,8 +109,15 @@ Configure behavior via `~/.cc-spacemolt/config.json` (or `data/config.json` duri
   "dangerouslySkipPermissions": false, // Bypass all permission checks (use with caution)
   "claudeArgs": ["--verbose"], // Additional CLI arguments appended to the Claude CLI command
   "claudeEnv": { "MY_VAR": "value" }, // Environment variables applied when launching Claude CLI
+  "userName": "Your Name", // Display name shown in the chat UI for your messages
+  "userAvatarPath": "avatar.png", // Path to your avatar image (relative to workspace, or absolute)
 }
 ```
+
+### Agent Avatar
+
+- The agent's name is taken from the `SPACEMOLT_USERNAME` variable in the .env file.
+- If there is an `avatar.png` in the workspace, it will be automatically used as the agent's avatar image.
 
 ## Development
 

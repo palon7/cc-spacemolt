@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import type { ParsedEntry, SessionMeta, AgentStatus, ToolResultEntry } from '@cc-spacemolt/shared';
+import type { ToolResultEntry } from '@cc-spacemolt/shared';
+import { useAgent } from '../contexts/AgentContext';
+import { useGame } from '../contexts/GameContext';
+import { useConfig } from '../contexts/ConfigContext';
 import { useStickToBottom } from '../hooks/useStickToBottom';
 import { useSessionList } from '../hooks/useSessionList';
 import { LuSend, LuSquare, LuArrowDown, LuClock, LuPlus } from 'react-icons/lu';
@@ -36,31 +39,21 @@ function StatusBadge({
   );
 }
 
-interface ClaudePanelProps {
-  entries: ParsedEntry[];
-  sessionMeta: SessionMeta | null;
-  status: AgentStatus;
-  connected: boolean;
-  initialPrompt: string;
-  startAgent: (instructions?: string) => void;
-  sendMessage: (text: string) => void;
-  interrupt: () => void;
-  resetSession: () => void;
-  selectSession: (sessionId: string) => void;
-}
+export function ClaudePanel() {
+  const {
+    entries,
+    sessionMeta,
+    status,
+    connected,
+    startAgent,
+    sendMessage,
+    interrupt,
+    resetSession,
+    selectSession,
+  } = useAgent();
+  const { gameState } = useGame();
+  const { initialPrompt } = useConfig();
 
-export function ClaudePanel({
-  entries,
-  sessionMeta,
-  status,
-  connected,
-  initialPrompt,
-  startAgent,
-  sendMessage,
-  interrupt,
-  resetSession,
-  selectSession,
-}: ClaudePanelProps) {
   const [input, setInput] = useState('');
   const [instructions, setInstructions] = useState('');
   const [showHistory, setShowHistory] = useState(false);
@@ -83,7 +76,7 @@ export function ClaudePanel({
   }, [entries.length, onContentGrew]);
 
   // Also auto-scroll on streaming updates (same entry count but content changed)
-  const lastEntryRef = useRef<ParsedEntry | null>(null);
+  const lastEntryRef = useRef(entries[entries.length - 1]);
   useEffect(() => {
     const last = entries[entries.length - 1];
     if (last && last !== lastEntryRef.current) {
@@ -131,6 +124,7 @@ export function ClaudePanel({
   const isRunning = status === 'running' || status === 'starting';
   const supportsInput = sessionMeta?.supportsInput ?? true;
   const isCompacting = sessionMeta?.isCompacting ?? false;
+  const agentName = gameState?.player.username;
 
   return (
     <div className="flex flex-col h-full">
@@ -220,6 +214,7 @@ export function ClaudePanel({
                 entry={entry}
                 toolResultMap={toolResultMap}
                 isFirstSystem={entry.id === firstSystemId}
+                agentName={agentName}
               />
             ));
           })()}

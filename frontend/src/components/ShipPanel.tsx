@@ -6,6 +6,8 @@ import { PanelHeader } from './common/PanelHeader';
 import { PanelHeaderButton } from './common/PanelHeaderButton';
 import { StarMap } from './StarMap';
 import { useMapData, resolveSystem } from '../hooks/useMapData';
+import { useConfig } from '../contexts/ConfigContext';
+import { Avatar } from './common/Avatar';
 
 interface ShipPanelProps {
   state: GameState;
@@ -29,6 +31,7 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
   const { data: mapData } = useMapData();
   const currentSystem = mapData ? resolveSystem(mapData, player.current_system) : null;
   const systemDisplayName = currentSystem?.name ?? player.current_system;
+  const { agentAvatarUrl } = useConfig();
 
   return (
     <div className="flex flex-col h-full">
@@ -39,7 +42,7 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
         right={
           <>
             {in_combat && (
-              <span className="text-2xs px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse font-bold tracking-wider">
+              <span className="text-2xs px-5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse font-bold tracking-wider">
                 COMBAT
               </span>
             )}
@@ -51,9 +54,13 @@ export function ShipPanel({ state, travelHistory, onOpenDetail }: ShipPanelProps
       />
       <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar min-h-0">
         <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-zinc-800/40 border border-zinc-800">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
-            {player.username[0]}
-          </div>
+          <Avatar
+            url={agentAvatarUrl}
+            initial="C"
+            gradientClasses="from-orange-400 to-amber-600"
+            size={42}
+          />
+
           <div className="flex-1 min-w-0">
             <div className="text-base text-zinc-200 truncate">{player.username}</div>
             <div className="flex items-center gap-1 text-xs truncate">

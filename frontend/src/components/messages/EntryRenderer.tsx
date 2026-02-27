@@ -11,16 +11,18 @@ export function EntryRenderer({
   entry,
   toolResultMap,
   isFirstSystem,
+  agentName,
 }: {
   entry: ParsedEntry;
   toolResultMap: Map<string, ToolResultEntry>;
   isFirstSystem?: boolean;
+  agentName?: string;
 }) {
   switch (entry.kind) {
     case 'system':
       return isFirstSystem ? <SystemMessage entry={entry} /> : null;
     case 'text':
-      return <TextMessage entry={entry} />;
+      return <TextMessage entry={entry} name={agentName} />;
     case 'thinking':
       return <ThinkingBlock entry={entry} />;
     case 'tool_call':

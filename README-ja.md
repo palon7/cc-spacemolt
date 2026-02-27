@@ -109,8 +109,15 @@ cc-spacemolt [options]
   "dangerouslySkipPermissions": false, // 全ての権限確認をスキップ（使用する場合は十分に注意してください）
   "claudeArgs": ["--verbose"], // Claude CLI コマンドに追加される引数
   "claudeEnv": { "MY_VAR": "value" }, // Claude CLI 起動時に適用される環境変数
+  "userName": "Your Name", // チャット UI に表示される自分の名前
+  "userAvatarPath": "avatar.png", // 自分のアバター画像のパス（ワークスペースからの相対パスまたは絶対パス）
 }
 ```
+
+### エージェントのアバター
+
+- エージェントの名前は、.env ファイルの `SPACEMOLT_USERNAME` から取得されます。
+- エージェントのアバター画像は、workspace内に `avatar.png` があれば自動で使用します。
 
 ## 開発
 
