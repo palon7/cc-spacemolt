@@ -1,4 +1,4 @@
-// Backend-internal types re-exported from shared, plus backend-only types
+// Backend-internal types re-exported from shared and claude-code-client
 export type {
   EntryKind,
   BaseEntry,
@@ -11,6 +11,9 @@ export type {
   ResultEntry,
   NotificationEntry,
   ParsedEntry,
+  StreamJsonMessage,
+} from 'claude-code-client';
+export type {
   AgentStatus,
   SessionMeta,
   ClientMessage,

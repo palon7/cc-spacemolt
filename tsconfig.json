@@ -1,4 +1,9 @@
 {
   "files": [],
-  "references": [{ "path": "shared" }, { "path": "backend" }, { "path": "frontend" }]
+  "references": [
+    { "path": "packages/claude-code-client" },
+    { "path": "shared" },
+    { "path": "backend" },
+    { "path": "frontend" }
+  ]
 }

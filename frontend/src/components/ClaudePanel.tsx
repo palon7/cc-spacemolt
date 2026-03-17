@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import type { ToolResultEntry } from '@cc-spacemolt/shared';
+import type { ToolResultEntry } from 'claude-code-client';
 import { useAgent } from '../contexts/AgentContext';
 import { useGame } from '../contexts/GameContext';
 import { useConfig } from '../contexts/ConfigContext';

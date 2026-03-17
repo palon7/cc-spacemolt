@@ -13,5 +13,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["src"],
-  "exclude": ["**/*.test.ts", "**/*.test.tsx", "node_modules", "dist"]
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "node_modules", "dist"],
+  "references": [{ "path": "../packages/claude-code-client" }]
 }

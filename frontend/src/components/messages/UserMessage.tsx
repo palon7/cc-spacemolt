@@ -1,4 +1,4 @@
-import type { UserMessageEntry } from '@cc-spacemolt/shared';
+import type { UserMessageEntry } from 'claude-code-client';
 import { useConfig } from '../../contexts/ConfigContext';
 import { Avatar } from '../common/Avatar';
 import { MessageHeader } from './MessageHeader';

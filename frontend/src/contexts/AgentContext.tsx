@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
-import type { ParsedEntry, SessionMeta, AgentStatus } from '@cc-spacemolt/shared';
+import type { ParsedEntry } from 'claude-code-client';
+import type { SessionMeta, AgentStatus } from '@cc-spacemolt/shared';
 
 interface AgentContextValue {
   entries: ParsedEntry[];

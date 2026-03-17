@@ -30,6 +30,7 @@
     "cc-spacemolt": "bin/cc-spacemolt.js"
   },
   "workspaces": [
+    "packages/*",
     "shared",
     "backend",
     "frontend"

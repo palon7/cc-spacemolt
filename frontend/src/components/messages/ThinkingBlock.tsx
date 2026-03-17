@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ThinkingEntry } from '@cc-spacemolt/shared';
+import type { ThinkingEntry } from 'claude-code-client';
 import { LuClock } from 'react-icons/lu';
 
 function getLastLine(text: string): string {

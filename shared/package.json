@@ -6,5 +6,8 @@
   "types": "dist/types.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.json"
+  },
+  "dependencies": {
+    "claude-code-client": "*"
   }
 }

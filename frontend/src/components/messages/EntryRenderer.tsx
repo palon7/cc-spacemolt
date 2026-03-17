@@ -1,4 +1,4 @@
-import type { ParsedEntry, ToolResultEntry } from '@cc-spacemolt/shared';
+import type { ParsedEntry, ToolResultEntry } from 'claude-code-client';
 import { SystemMessage } from './SystemMessage';
 import { TextMessage } from './TextMessage';
 import { ThinkingBlock } from './ThinkingBlock';

@@ -1,4 +1,4 @@
-import type { ResultEntry } from '@cc-spacemolt/shared';
+import type { ResultEntry } from 'claude-code-client';
 
 export function ResultMessage({ entry }: { entry: ResultEntry }) {
   const isError = entry.isError;

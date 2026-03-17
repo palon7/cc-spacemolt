@@ -1,4 +1,4 @@
-import type { TextEntry } from '@cc-spacemolt/shared';
+import type { TextEntry } from 'claude-code-client';
 import { useConfig } from '../../contexts/ConfigContext';
 import { MarkdownContent } from '../common/MarkdownContent';
 import { Avatar } from '../common/Avatar';

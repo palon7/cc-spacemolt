@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ToolCallEntry, ToolResultEntry } from '@cc-spacemolt/shared';
+import type { ToolCallEntry, ToolResultEntry } from 'claude-code-client';
 import { LuCheck, LuX } from 'react-icons/lu';
 import { getToolEmoji, getActionLabel } from './ToolMeta';
 import { formatActionDetail, formatContent } from './ActionDetail';

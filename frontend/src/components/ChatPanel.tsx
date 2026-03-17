@@ -1,5 +1,5 @@
 import { useEffect, useRef, useMemo } from 'react';
-import type { ParsedEntry, ToolResultEntry } from '@cc-spacemolt/shared';
+import type { ParsedEntry, ToolResultEntry } from 'claude-code-client';
 import { SystemMessage } from './messages/SystemMessage';
 import { TextMessage } from './messages/TextMessage';
 import { ThinkingBlock } from './messages/ThinkingBlock';

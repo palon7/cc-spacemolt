@@ -10,5 +10,6 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["types.ts"]
+  "include": ["types.ts"],
+  "references": [{ "path": "../packages/claude-code-client" }]
 }

@@ -2,9 +2,8 @@ import fs from 'fs';
 import fsp from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
-import type { ParsedEntry, SessionMeta, SessionSummary } from './types.js';
-import { createReplayParser } from '../agent/message-parser.js';
-import type { StreamJsonMessage } from '../agent/message-parser.js';
+import type { ParsedEntry, SessionMeta, SessionSummary, StreamJsonMessage } from './types.js';
+import { MessageParser } from 'claude-code-client';
 import { getContextWindow } from '../utils/context-window.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -60,7 +59,8 @@ export async function replaySession(
   const rawPath = path.join(logDir, sessionId, 'raw.jsonl');
   await fsp.access(rawPath); // throws if not found
 
-  const parse = createReplayParser();
+  const parser = new MessageParser();
+  const parse = (msg: StreamJsonMessage) => parser.parse(msg);
   const entries: ParsedEntry[] = [];
   let meta: SessionMeta | null = null;
 

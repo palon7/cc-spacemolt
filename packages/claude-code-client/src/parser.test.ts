@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { parseMessage, resetParserState } from './message-parser.js';
+import { MessageParser } from './parser.js';
 import type {
   SystemEntry,
   TextEntry,
@@ -8,19 +8,21 @@ import type {
   ToolResultEntry,
   UserMessageEntry,
   ResultEntry,
-} from '../state/types.js';
+} from './types.js';
+
+let parser: MessageParser;
 
 beforeEach(() => {
-  resetParserState();
+  parser = new MessageParser();
 });
 
 // ---------------------------------------------------------------------------
 // system
 // ---------------------------------------------------------------------------
 
-describe('parseMessage - system', () => {
+describe('MessageParser - system', () => {
   it('system/init -> SystemEntry', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'system',
       subtype: 'init',
       session_id: 'sess-1',
@@ -37,7 +39,7 @@ describe('parseMessage - system', () => {
   });
 
   it('system/init -> betas are preserved', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'system',
       subtype: 'init',
       session_id: 's',
@@ -50,7 +52,7 @@ describe('parseMessage - system', () => {
   });
 
   it('system/non-init -> []', () => {
-    expect(parseMessage({ type: 'system', subtype: 'status' })).toHaveLength(0);
+    expect(parser.parse({ type: 'system', subtype: 'status' })).toHaveLength(0);
   });
 });
 
@@ -58,9 +60,9 @@ describe('parseMessage - system', () => {
 // assistant
 // ---------------------------------------------------------------------------
 
-describe('parseMessage - assistant', () => {
+describe('MessageParser - assistant', () => {
   it('string content -> TextEntry', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'assistant',
       message: { role: 'assistant', content: 'hello' },
     });
@@ -72,7 +74,7 @@ describe('parseMessage - assistant', () => {
   });
 
   it('text block -> TextEntry', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'assistant',
       message: { role: 'assistant', content: [{ type: 'text', text: 'world' }] },
     });
@@ -80,7 +82,7 @@ describe('parseMessage - assistant', () => {
   });
 
   it('thinking block -> ThinkingEntry', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'assistant',
       message: { role: 'assistant', content: [{ type: 'thinking', thinking: 'hmm' }] },
     });
@@ -90,7 +92,7 @@ describe('parseMessage - assistant', () => {
   });
 
   it('tool_use block -> ToolCallEntry + toolNameMap registration', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'assistant',
       message: {
         role: 'assistant',
@@ -105,7 +107,7 @@ describe('parseMessage - assistant', () => {
   });
 
   it('multiple mixed blocks -> all are parsed', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'assistant',
       message: {
         role: 'assistant',
@@ -123,7 +125,7 @@ describe('parseMessage - assistant', () => {
   });
 
   it('empty content array -> []', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'assistant',
       message: { role: 'assistant', content: [] },
     });
@@ -131,7 +133,7 @@ describe('parseMessage - assistant', () => {
   });
 
   it('message undefined -> []', () => {
-    const entries = parseMessage({ type: 'assistant' });
+    const entries = parser.parse({ type: 'assistant' });
     expect(entries).toHaveLength(0);
   });
 });
@@ -140,17 +142,16 @@ describe('parseMessage - assistant', () => {
 // user
 // ---------------------------------------------------------------------------
 
-describe('parseMessage - user', () => {
+describe('MessageParser - user', () => {
   it('tool_result (string content) -> ToolResultEntry', () => {
-    // register tool_use first
-    parseMessage({
+    parser.parse({
       type: 'assistant',
       message: {
         role: 'assistant',
         content: [{ type: 'tool_use', id: 'tu-2', name: 'bash', input: {} }],
       },
     });
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       message: {
         role: 'user',
@@ -165,14 +166,14 @@ describe('parseMessage - user', () => {
   });
 
   it('tool_result (array content) -> text concatenation', () => {
-    parseMessage({
+    parser.parse({
       type: 'assistant',
       message: {
         role: 'assistant',
         content: [{ type: 'tool_use', id: 'tu-3', name: 'read', input: {} }],
       },
     });
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       message: {
         role: 'user',
@@ -192,14 +193,14 @@ describe('parseMessage - user', () => {
   });
 
   it('tool_result is_error: true -> isError reflected', () => {
-    parseMessage({
+    parser.parse({
       type: 'assistant',
       message: {
         role: 'assistant',
         content: [{ type: 'tool_use', id: 'tu-err', name: 'bash', input: {} }],
       },
     });
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       message: {
         role: 'user',
@@ -212,7 +213,7 @@ describe('parseMessage - user', () => {
   });
 
   it('tool_result (unregistered ID) -> toolName: unknown', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       message: {
         role: 'user',
@@ -223,7 +224,7 @@ describe('parseMessage - user', () => {
   });
 
   it('tool_use_result fallback (string)', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       message: { role: 'user', content: [] },
       tool_use_result: 'fallback result',
@@ -235,7 +236,7 @@ describe('parseMessage - user', () => {
   });
 
   it('tool_use_result fallback (object) -> JSON stringified', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       message: { role: 'user', content: [] },
       tool_use_result: { key: 'value' },
@@ -244,7 +245,7 @@ describe('parseMessage - user', () => {
   });
 
   it('isSynthetic=true -> []', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       isSynthetic: true,
       message: { role: 'user', content: 'synthetic' },
@@ -253,7 +254,7 @@ describe('parseMessage - user', () => {
   });
 
   it('non-synthetic text -> UserMessageEntry', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       message: { role: 'user', content: 'hello user' },
     });
@@ -263,7 +264,7 @@ describe('parseMessage - user', () => {
   });
 
   it('isSynthetic=true + text in array content -> ignored', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'user',
       isSynthetic: true,
       message: {
@@ -275,7 +276,7 @@ describe('parseMessage - user', () => {
   });
 
   it('message undefined -> []', () => {
-    const entries = parseMessage({ type: 'user' });
+    const entries = parser.parse({ type: 'user' });
     expect(entries).toHaveLength(0);
   });
 });
@@ -284,9 +285,9 @@ describe('parseMessage - user', () => {
 // result
 // ---------------------------------------------------------------------------
 
-describe('parseMessage - result', () => {
+describe('MessageParser - result', () => {
   it('result -> ResultEntry (all fields)', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'result',
       subtype: 'success',
       total_cost_usd: 0.05,
@@ -307,7 +308,7 @@ describe('parseMessage - result', () => {
   });
 
   it('result -> default values are filled', () => {
-    const entries = parseMessage({ type: 'result' });
+    const entries = parser.parse({ type: 'result' });
     const e = entries[0] as ResultEntry;
     expect(e.subtype).toBe('unknown');
     expect(e.totalCostUsd).toBe(0);
@@ -321,9 +322,9 @@ describe('parseMessage - result', () => {
 // stream_event
 // ---------------------------------------------------------------------------
 
-describe('parseMessage - stream_event', () => {
+describe('MessageParser - stream_event', () => {
   it('content_block_start text -> TextEntry(isStreaming:true)', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
     });
@@ -334,7 +335,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('content_block_start thinking -> ThinkingEntry(isStreaming:true)', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: {
         type: 'content_block_start',
@@ -348,7 +349,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('content_block_start tool_use -> ToolCallEntry + toolNameMap registration', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: {
         type: 'content_block_start',
@@ -362,8 +363,7 @@ describe('parseMessage - stream_event', () => {
     expect(e.toolUseId).toBe('stream-tu-1');
     expect(e.input).toEqual({});
 
-    // verify registration in toolNameMap (name is resolved via tool_result)
-    const resultEntries = parseMessage({
+    const resultEntries = parser.parse({
       type: 'user',
       message: {
         role: 'user',
@@ -374,12 +374,12 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('content_block_delta (text_delta) -> preserves existing ID', () => {
-    const startEntries = parseMessage({
+    const startEntries = parser.parse({
       type: 'stream_event',
       event: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
     });
     const startId = startEntries[0]!.id;
-    const deltaEntries = parseMessage({
+    const deltaEntries = parser.parse({
       type: 'stream_event',
       event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'hi' } },
     });
@@ -389,7 +389,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('content_block_delta (thinking_delta) -> ThinkingEntry', () => {
-    parseMessage({
+    parser.parse({
       type: 'stream_event',
       event: {
         type: 'content_block_start',
@@ -397,7 +397,7 @@ describe('parseMessage - stream_event', () => {
         content_block: { type: 'thinking', thinking: '' },
       },
     });
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: {
         type: 'content_block_delta',
@@ -411,7 +411,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('unknown index delta -> []', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: { type: 'content_block_delta', index: 99, delta: { type: 'text_delta', text: 'x' } },
     });
@@ -419,7 +419,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('content_block_stop -> []', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: { type: 'content_block_stop', index: 0 },
     });
@@ -427,7 +427,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('message_delta -> []', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: { type: 'message_delta', delta: { stop_reason: 'end_turn' } },
     });
@@ -435,7 +435,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('message_start -> []', () => {
-    const entries = parseMessage({
+    const entries = parser.parse({
       type: 'stream_event',
       event: { type: 'message_start', message: { model: 'claude-3' } },
     });
@@ -443,7 +443,7 @@ describe('parseMessage - stream_event', () => {
   });
 
   it('event undefined -> []', () => {
-    const entries = parseMessage({ type: 'stream_event' });
+    const entries = parser.parse({ type: 'stream_event' });
     expect(entries).toHaveLength(0);
   });
 });
@@ -452,23 +452,22 @@ describe('parseMessage - stream_event', () => {
 // unknown / edge cases
 // ---------------------------------------------------------------------------
 
-describe('parseMessage - unknown', () => {
+describe('MessageParser - unknown', () => {
   it('unknown type -> []', () => {
-    expect(parseMessage({ type: 'unknown_type' })).toHaveLength(0);
+    expect(parser.parse({ type: 'unknown_type' })).toHaveLength(0);
   });
 });
 
-describe('parseMessage - toolNameMap cleanup', () => {
+describe('MessageParser - toolNameMap cleanup', () => {
   it('entry is deleted from toolNameMap after tool_result processing', () => {
-    parseMessage({
+    parser.parse({
       type: 'assistant',
       message: {
         role: 'assistant',
         content: [{ type: 'tool_use', id: 'tu-cleanup', name: 'bash', input: {} }],
       },
     });
-    // 1st call: name is resolved correctly
-    const first = parseMessage({
+    const first = parser.parse({
       type: 'user',
       message: {
         role: 'user',
@@ -477,8 +476,7 @@ describe('parseMessage - toolNameMap cleanup', () => {
     });
     expect((first[0] as ToolResultEntry).toolName).toBe('bash');
 
-    // 2nd call: already deleted, so unknown
-    const second = parseMessage({
+    const second = parser.parse({
       type: 'user',
       message: {
         role: 'user',
@@ -486,5 +484,29 @@ describe('parseMessage - toolNameMap cleanup', () => {
       },
     });
     expect((second[0] as ToolResultEntry).toolName).toBe('unknown');
+  });
+});
+
+describe('MessageParser - each instance is isolated', () => {
+  it('two parsers do not share state', () => {
+    const parser2 = new MessageParser();
+
+    parser.parse({
+      type: 'assistant',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'tool_use', id: 'shared-tu', name: 'bash', input: {} }],
+      },
+    });
+
+    // parser2 has no knowledge of 'shared-tu'
+    const entries = parser2.parse({
+      type: 'user',
+      message: {
+        role: 'user',
+        content: [{ type: 'tool_result', tool_use_id: 'shared-tu', content: 'ok' }],
+      },
+    });
+    expect((entries[0] as ToolResultEntry).toolName).toBe('unknown');
   });
 });

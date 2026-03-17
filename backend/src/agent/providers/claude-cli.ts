@@ -1,9 +1,6 @@
-import spawn from 'cross-spawn';
-import type { ChildProcess } from 'child_process';
-import { createInterface } from 'readline';
+import { ClaudeCodeClient } from 'claude-code-client';
+import type { ClaudeCodeSession } from 'claude-code-client';
 import type { AgentProvider, ProviderCallbacks } from '../provider.js';
-import { parseMessage, resetParserState } from '../message-parser.js';
-import type { StreamJsonMessage } from '../message-parser.js';
 import type { AppConfig } from '../../config.js';
 import { debug } from '../../logger/debug-logger.js';
 
@@ -17,76 +14,77 @@ export class ClaudeCliProvider implements AgentProvider {
   readonly name = 'claude-cli';
   readonly supportsInput = true;
 
-  private _sessionId = '';
-  private process: ChildProcess | null = null;
-  private callbacks: ProviderCallbacks | null = null;
-  private config: AppConfig;
-  private bypassPermissions: boolean;
-  private workspacePath: string;
-  private isResuming = false;
-  private aborted = false;
-  private initialPromptOverride?: string;
+  private client: ClaudeCodeClient;
+  private currentSession: ClaudeCodeSession | null = null;
   private resumeSessionId?: string;
+  private _callbacks: ProviderCallbacks | null = null;
+  private config: AppConfig;
 
   get sessionId(): string {
-    return this._sessionId;
+    return this.currentSession?.sessionId ?? '';
   }
 
   constructor(options: ClaudeCliOptions) {
     this.config = options.config;
-    this.bypassPermissions = options.bypassPermissions;
-    this.workspacePath = options.workspacePath;
+    this.client = new ClaudeCodeClient({
+      workspacePath: options.workspacePath,
+      model: options.config.model,
+      appendSystemPrompt: this.buildSystemPrompt(),
+      mcpConfig: options.config.mcpServers as Record<string, unknown>,
+      allowedTools: this.buildAllowedTools(),
+      bypassPermissions: options.bypassPermissions,
+      env: options.config.claudeEnv,
+      extraArgs: options.config.claudeArgs,
+    });
   }
 
   async start(callbacks: ProviderCallbacks, initialPrompt?: string): Promise<void> {
     debug('provider', 'start() called');
-    this.callbacks = callbacks;
-    this.aborted = false;
-    this.initialPromptOverride = initialPrompt;
+    this._callbacks = callbacks;
 
-    const resuming = this.isResuming;
-    this.isResuming = false;
+    const isNew = !this.resumeSessionId;
+    const session = this.resumeSessionId
+      ? this.client.resume(this.resumeSessionId, initialPrompt)
+      : this.client.start(initialPrompt ?? this.config.initialPrompt ?? '');
+    this.resumeSessionId = undefined;
+    this.currentSession = session;
 
-    // Reset full parser state (toolNameMap + streamingBlockMap) on every session start
-    // to prevent stale entries from leaking across sessions.
-    resetParserState();
+    debug('provider', `session created, isNew=${isNew}`);
 
-    debug('provider', `runProcess(resuming=${resuming})`);
-    await this.runProcess(resuming);
+    session.on('entry', (entry) => callbacks.onMessage(entry));
+    session.on('raw', (raw) => callbacks.onRawMessage(raw));
+    session.on('error', (err) => callbacks.onError(err));
+    session.on('stderr', (line) => {
+      debug('provider', `stderr: ${line}`);
+      callbacks.onStderr?.(line);
+    });
+
+    // Notify about explicit user input (initial prompt for new sessions only)
+    if (isNew) {
+      const text = initialPrompt ?? this.config.initialPrompt ?? '';
+      if (text) {
+        process.nextTick(() => callbacks.onUserInput?.(text));
+      }
+    }
+
+    await session.done();
   }
 
   sendMessage(text: string): void {
-    if (!this.process?.stdin || !this.process.stdin.writable) return;
-
-    const rawPayload = {
-      type: 'user' as const,
-      session_id: this._sessionId,
-      message: { role: 'user', content: text },
-    };
-
-    this.process.stdin.write(JSON.stringify(rawPayload) + '\n');
-    this.callbacks?.onRawMessage(rawPayload);
-    this.callbacks?.onUserInput?.(text);
+    this.currentSession?.send(text);
+    this._callbacks?.onUserInput?.(text);
   }
 
   interrupt(): void {
-    if (!this.process || this.aborted) return;
-    this.isResuming = true;
-    // On Windows, SIGINT is not supported for child processes; use SIGTERM instead.
-    // This terminates the process rather than just interrupting it, but the
-    // resume flow still works since isResuming is set to true.
-    const signal = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
-    this.process.kill(signal);
+    if (!this.currentSession) return;
+    this.resumeSessionId = this.currentSession.sessionId;
+    this.currentSession.interrupt();
   }
 
   abort(): void {
-    this.aborted = true;
-    this.isResuming = false;
+    this.currentSession?.abort();
+    this.currentSession = null;
     this.resumeSessionId = undefined;
-    if (this.process) {
-      this.process.kill('SIGTERM');
-      this.process = null;
-    }
   }
 
   setResumeSessionId(sessionId: string): void {
@@ -97,86 +95,33 @@ export class ClaudeCliProvider implements AgentProvider {
   // Private
   // ---------------------------------------------------------------------------
 
-  private buildArgs(resuming: boolean): string[] {
-    const args: string[] = [
-      '--print',
-      '--output-format',
-      'stream-json',
-      '--verbose',
-      '--include-partial-messages',
-      '--input-format',
-      'stream-json',
-      '--permission-mode',
-      'acceptEdits',
-    ];
-
-    // System prompt
-    const systemPromptParts: string[] = [];
+  private buildSystemPrompt(): string | undefined {
+    const parts: string[] = [];
     if (this.config.language) {
-      systemPromptParts.push(
+      parts.push(
         `Communicate with the user and write all local records in ${this.config.language}. Use english only for spacemolt in-game.`,
       );
     }
     if (this.config.systemPromptAppend) {
-      systemPromptParts.push(this.config.systemPromptAppend);
+      parts.push(this.config.systemPromptAppend);
     }
-    if (systemPromptParts.length > 0) {
-      // Windows cmd.exe cannot handle newlines in command arguments; use space as separator
-      const sep = process.platform === 'win32' ? ' ' : '\n';
-      args.push('--append-system-prompt', systemPromptParts.join(sep));
-    }
-
-    // MCP config
-    if (Object.keys(this.config.mcpServers).length > 0) {
-      args.push('--mcp-config', JSON.stringify({ mcpServers: this.config.mcpServers }));
-    }
-
-    // Model
-    if (this.config.model) {
-      args.push('--model', this.config.model);
-    }
-
-    // Permissions
-    if (this.bypassPermissions) {
-      args.push('--dangerously-skip-permissions');
-    } else {
-      const allowedTools = this.buildAllowedTools();
-      if (allowedTools.length > 0) {
-        args.push('--allowedTools', allowedTools.join(','));
-      }
-    }
-
-    // Disallowed tools
-    args.push('--disallowedTools', 'AskUserQuestion');
-
-    // Resume
-    const resumeId = resuming ? this._sessionId : this.resumeSessionId;
-    if (resumeId) {
-      args.push('--resume', resumeId);
-    }
-
-    // Custom args from config (appended last)
-    if (this.config.claudeArgs && this.config.claudeArgs.length > 0) {
-      args.push(...this.config.claudeArgs);
-    }
-
-    return args;
+    if (parts.length === 0) return undefined;
+    // Windows cmd.exe cannot handle newlines in command arguments; use space as separator
+    const sep = process.platform === 'win32' ? ' ' : '\n';
+    return parts.join(sep);
   }
 
   private buildAllowedTools(): string[] {
     const tools: string[] = [];
 
-    // Auto-allowed built-in tools
     for (const tool of this.config.permissions.autoAllowTools) {
       tools.push(tool);
     }
 
-    // MCP prefixes -> wildcard patterns
     for (const prefix of this.config.permissions.allowedMcpPrefixes) {
       tools.push(`${prefix}*`);
     }
 
-    // Web domains — allow WebFetch and WebSearch for configured domains
     if (this.config.permissions.allowedWebDomains.length > 0) {
       for (const domain of this.config.permissions.allowedWebDomains) {
         tools.push(`WebFetch(domain:${domain})`);
@@ -185,123 +130,5 @@ export class ClaudeCliProvider implements AgentProvider {
     }
 
     return tools;
-  }
-
-  private runProcess(resuming: boolean): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      const args = this.buildArgs(resuming);
-
-      const cwd = this.workspacePath;
-      debug('provider', 'Spawning: claude with args:', args);
-      debug('provider', 'CWD:', cwd);
-      const proc = spawn('claude', args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd,
-        env: { ...process.env, ...this.config.claudeEnv },
-      });
-      this.process = proc;
-      debug('provider', `Process spawned, pid=${proc.pid}`);
-
-      // Send message via stdin — CLI always blocks waiting for stdin with --input-format stream-json
-      const resumeId = resuming ? this._sessionId : this.resumeSessionId;
-      if (proc.stdin) {
-        const text =
-          this.initialPromptOverride || (resumeId ? 'Continue.' : this.config.initialPrompt);
-        const rawPayload = {
-          type: 'user' as const,
-          ...(resumeId ? { session_id: resumeId } : {}),
-          message: { role: 'user', content: text },
-        };
-        debug(
-          'provider',
-          `Sending stdin message (resume=${!!resumeId}): ${JSON.stringify(rawPayload).slice(0, 200)}`,
-        );
-        proc.stdin.write(JSON.stringify(rawPayload) + '\n');
-
-        // Log and notify — the CLI does not echo stdin back in its output
-        this.callbacks?.onRawMessage(rawPayload);
-        const isExplicitUserInput = !!this.initialPromptOverride || !resumeId;
-        if (isExplicitUserInput && text) {
-          this.callbacks?.onUserInput?.(text);
-        }
-      }
-
-      // Parse stdout as NDJSON
-      const rl = createInterface({ input: proc.stdout! });
-      let stderrRl: ReturnType<typeof createInterface> | undefined;
-
-      rl.on('line', (line) => {
-        if (!line.trim()) return;
-
-        let raw: StreamJsonMessage;
-        try {
-          raw = JSON.parse(line) as StreamJsonMessage;
-        } catch {
-          debug('provider', 'Failed to parse stdout line:', line.slice(0, 200));
-          return; // Skip malformed lines
-        }
-
-        // Track session ID from init message
-        if (raw.type === 'system' && raw.subtype === 'init' && raw.session_id) {
-          this._sessionId = raw.session_id;
-          debug('provider', `Session ID: ${raw.session_id}`);
-        }
-
-        // Forward raw message for logging (skip stream_events to match original behavior)
-        if (raw.type !== 'stream_event') {
-          this.callbacks?.onRawMessage(raw);
-        }
-
-        // Parse and forward to UI
-        const entries = parseMessage(raw);
-        for (const entry of entries) {
-          this.callbacks?.onMessage(entry);
-        }
-
-        // Close stdin on result message so CLI can exit naturally
-        if (raw.type === 'result' && proc.stdin && !proc.stdin.destroyed) {
-          debug('provider', 'Result received, closing stdin');
-          proc.stdin.end();
-        }
-      });
-
-      // Collect stderr
-      if (proc.stderr) {
-        stderrRl = createInterface({ input: proc.stderr });
-        stderrRl.on('line', (line) => {
-          debug('provider', `stderr: ${line}`);
-          this.callbacks?.onStderr?.(line);
-        });
-      }
-
-      proc.on('error', (err) => {
-        debug('provider', `Process error: ${err.message}`);
-        this.process = null;
-        rl.close();
-        stderrRl?.close();
-        reject(err);
-      });
-
-      proc.on('close', (code) => {
-        debug(
-          'provider',
-          `Process closed with code=${code}, aborted=${this.aborted}, isResuming=${this.isResuming}`,
-        );
-        this.process = null;
-        rl.close();
-        stderrRl?.close();
-
-        if (this.aborted || this.isResuming) {
-          resolve();
-          return;
-        }
-
-        if (code !== 0 && code !== null) {
-          this.callbacks?.onError(new Error(`claude process exited with code ${code}`));
-        }
-
-        resolve();
-      });
-    });
   }
 }

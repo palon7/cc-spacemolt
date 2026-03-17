@@ -1,10 +1,9 @@
 import type { AgentProvider, ProviderCallbacks } from '../agent/provider.js';
-import type { StreamJsonMessage } from '../agent/message-parser.js';
 import { FileLogger } from '../logger/file-logger.js';
 import { debug } from '../logger/debug-logger.js';
 import { getContextWindow } from '../utils/context-window.js';
 import { replaySession } from './session-history.js';
-import type { ParsedEntry, AgentStatus, SessionMeta } from '../state/types.js';
+import type { ParsedEntry, AgentStatus, SessionMeta, StreamJsonMessage } from '../state/types.js';
 import consola from 'consola';
 
 export interface SessionManagerCallbacks {

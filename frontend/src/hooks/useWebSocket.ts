@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { MAX_GAME_EVENTS } from '@cc-spacemolt/shared';
+import type { ParsedEntry } from 'claude-code-client';
 import type {
-  ParsedEntry,
   SessionMeta,
   AgentStatus,
   ClientMessage,

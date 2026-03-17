@@ -1,4 +1,4 @@
-import type { SystemEntry } from '@cc-spacemolt/shared';
+import type { SystemEntry } from 'claude-code-client';
 import { MessageHeader } from './MessageHeader';
 
 export function SystemMessage({ entry }: { entry: SystemEntry }) {
