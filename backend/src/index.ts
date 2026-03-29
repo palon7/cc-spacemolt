@@ -6,7 +6,12 @@ import updateNotifier from 'update-notifier';
 import packageJson from '../../package.json' with { type: 'json' };
 
 import type { AppConfig } from './config.js';
-import { loadConfig, applyCliOverrides, defaultConfigDir } from './config.js';
+import {
+  loadConfig,
+  applyCliOverrides,
+  defaultConfigDir,
+  resolveAutoResumeConfig,
+} from './config.js';
 import { ClaudeCliProvider } from './agent/providers/claude-cli.js';
 import { SessionManager } from './state/session-manager.js';
 import { enableDebugLog, debug } from './logger/debug-logger.js';
@@ -111,7 +116,13 @@ async function main() {
     workspacePath,
   });
 
-  const sessionManager = new SessionManager(provider, config.maxLogEntries, logDir);
+  const autoResumeConfig = resolveAutoResumeConfig(config.autoResume);
+  const sessionManager = new SessionManager(
+    provider,
+    config.maxLogEntries,
+    logDir,
+    autoResumeConfig,
+  );
   const gameConnectionManager = new GameConnectionManager(workspacePath);
   const gameData = await loadGameData();
 

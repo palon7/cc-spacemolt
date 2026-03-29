@@ -17,6 +17,7 @@ export type LogGroup =
   | 'game-data'
   | 'spacemolt'
   | 'session-manager'
+  | 'auto-resume'
   | 'server';
 
 const colorByLabel: Record<LogGroup, StyleColor> = {
@@ -28,6 +29,7 @@ const colorByLabel: Record<LogGroup, StyleColor> = {
   'game-data': 'blueBright',
   spacemolt: 'red',
   'session-manager': 'magentaBright',
+  'auto-resume': 'yellowBright',
   server: 'yellow',
 };
 
